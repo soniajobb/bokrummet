@@ -10,6 +10,8 @@ export default function Footer() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        flexWrap: "wrap",
+        gap: 8,
         fontSize: 13,
         color: colors.textMuted,
       }}

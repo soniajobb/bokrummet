@@ -44,7 +44,7 @@ export default function ListView({
             margin: 0,
             fontFamily: fonts.heading,
             fontWeight: 600,
-            fontSize: 92,
+            fontSize: "clamp(44px, 11vw, 92px)",
             lineHeight: 0.95,
             color: colors.textDark,
           }}
@@ -54,8 +54,8 @@ export default function ListView({
         <p
           style={{
             margin: "22px 0 0",
-            maxWidth: 580,
-            fontSize: 21,
+            maxWidth: "min(580px, 100%)",
+            fontSize: "clamp(16px, 3.2vw, 21px)",
             fontStyle: "italic",
             lineHeight: 1.55,
             color: colors.textSoft,
@@ -71,11 +71,11 @@ export default function ListView({
             background: colors.card,
             border: `1px solid ${colors.border2}`,
             borderRadius: 12,
-            padding: "24px 26px",
+            padding: "clamp(16px, 4vw, 24px) clamp(16px, 4vw, 26px)",
             marginBottom: 8,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <span style={{ fontFamily: fonts.heading, fontWeight: 600, fontSize: 26, color: colors.textDark }}>
               Lägg till en bok
             </span>

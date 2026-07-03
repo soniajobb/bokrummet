@@ -3,7 +3,7 @@ import HoverButton from "./HoverButton";
 
 export default function TopBar({ sellerMode, onToggleSeller, likedCount, onOpenSaved, cartCount, onOpenCart }) {
   return (
-    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 14, marginBottom: 8 }}>
+    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 8 }}>
       <HoverButton
         onClick={onToggleSeller}
         title="Endast för dig som säljer"

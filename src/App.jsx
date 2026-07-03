@@ -215,7 +215,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: colors.paper, fontFamily: fonts.body, color: colors.textDark }}>
-      <div style={{ maxWidth: 1080, margin: "0 auto", padding: "36px 40px 96px" }}>
+      <div style={{ maxWidth: 1080, margin: "0 auto", padding: "clamp(20px, 5vw, 36px) clamp(16px, 5vw, 40px) 72px" }}>
         <TopBar
           sellerMode={sellerMode}
           onToggleSeller={toggleSellerMode}

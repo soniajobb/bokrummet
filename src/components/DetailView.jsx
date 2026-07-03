@@ -49,12 +49,12 @@ export default function DetailView({
         <CoverImage
           src={book.cover}
           alt={book.title}
-          width={300}
+          width="clamp(200px, 70vw, 300px)"
           radius={6}
           boxShadow="0 24px 44px -18px rgba(51,41,31,.6)"
         />
 
-        <div style={{ flex: 1, minWidth: 300, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ flex: "1 1 260px", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 11, letterSpacing: 2.5, textTransform: "uppercase", color: colors.accent }}>
               {book.tag}
@@ -83,7 +83,7 @@ export default function DetailView({
               margin: 0,
               fontFamily: fonts.heading,
               fontWeight: 600,
-              fontSize: 52,
+              fontSize: "clamp(32px, 7vw, 52px)",
               lineHeight: 1.02,
               color: colors.textDark,
             }}
@@ -107,7 +107,7 @@ export default function DetailView({
           <p style={{ margin: "8px 0 0", fontSize: 18, lineHeight: 1.7, color: colors.textSoft3 }}>{book.desc}</p>
 
           <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: fonts.heading, fontWeight: 600, fontSize: 40, color: colors.accent }}>
+            <span style={{ fontFamily: fonts.heading, fontWeight: 600, fontSize: "clamp(28px, 6vw, 40px)", color: colors.accent }}>
               {book.price}
             </span>
 

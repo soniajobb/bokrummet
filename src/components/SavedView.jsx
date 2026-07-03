@@ -27,7 +27,7 @@ export default function SavedView({ savedBooks, onGoBack, onOpenDetail, onAddToC
         <div style={{ fontSize: 13, letterSpacing: 3.5, textTransform: "uppercase", color: colors.accent, marginBottom: 14 }}>
           Dina sparade
         </div>
-        <h1 style={{ margin: 0, fontFamily: fonts.heading, fontWeight: 600, fontSize: 64, lineHeight: 1, color: colors.textDark }}>
+        <h1 style={{ margin: 0, fontFamily: fonts.heading, fontWeight: 600, fontSize: "clamp(38px, 9vw, 64px)", lineHeight: 1, color: colors.textDark }}>
           Sparade böcker
         </h1>
       </header>

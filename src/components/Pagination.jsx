@@ -5,7 +5,7 @@ export default function Pagination({ totalPages, page, onGoPage }) {
   if (totalPages <= 1) return null;
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, marginTop: 56 }}>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexWrap: "wrap", gap: 10, marginTop: 56 }}>
       {Array.from({ length: totalPages }, (_, n) =>
         n === page ? (
           <span

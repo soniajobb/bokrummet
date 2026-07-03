@@ -2,6 +2,7 @@ import { colors, fonts } from "../theme";
 import HoverButton from "./HoverButton";
 import CoverImage from "./CoverImage";
 import EditBookForm from "./EditBookForm";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 export default function BookRow({
   book,
@@ -22,18 +23,19 @@ export default function BookRow({
   onCancelEdit,
 }) {
   const isList = variant === "list";
-  const coverWidth = isList ? 240 : 200;
-  const titleSize = isList ? 46 : 40;
-  const priceSize = isList ? 34 : 32;
+  const stacked = useMediaQuery("(max-width: 680px)");
+  const coverWidth = isList ? "clamp(150px, 55vw, 240px)" : "clamp(130px, 48vw, 200px)";
+  const titleSize = isList ? "clamp(28px, 6.5vw, 46px)" : "clamp(26px, 6vw, 40px)";
+  const priceSize = isList ? "clamp(24px, 5.5vw, 34px)" : "clamp(22px, 5vw, 32px)";
 
   return (
     <div
       style={{
         display: "flex",
-        gap: 52,
-        alignItems: "center",
-        flexDirection: rowDir,
-        padding: "44px 0",
+        gap: "clamp(20px, 6vw, 52px)",
+        alignItems: stacked ? "stretch" : "center",
+        flexDirection: stacked ? "column" : rowDir,
+        padding: "clamp(28px, 6vw, 44px) 0",
         borderTop: `1px solid ${colors.border1}`,
       }}
     >
@@ -46,7 +48,7 @@ export default function BookRow({
         onClick={onOpen}
       />
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: isList ? 14 : 12 }}>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: isList ? 14 : 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 11, letterSpacing: 2.5, textTransform: "uppercase", color: colors.accent }}>
             {book.tag}
@@ -82,6 +84,7 @@ export default function BookRow({
             color: colors.textDark,
             cursor: "pointer",
             width: "fit-content",
+            maxWidth: "100%",
           }}
           hoverStyle={{ color: colors.accent }}
         >
@@ -109,7 +112,7 @@ export default function BookRow({
         )}
 
         {isList && (
-          <p style={{ margin: "6px 0 0", maxWidth: 460, fontSize: 17, lineHeight: 1.6, color: colors.textSoft3 }}>
+          <p style={{ margin: "6px 0 0", maxWidth: "min(460px, 100%)", fontSize: 17, lineHeight: 1.6, color: colors.textSoft3 }}>
             {book.desc}
           </p>
         )}

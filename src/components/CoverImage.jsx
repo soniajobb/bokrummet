@@ -1,16 +1,20 @@
 import { colors } from "../theme";
 
 export default function CoverImage({ src, alt, width, radius = 5, placeholder = "Omslag", onClick, boxShadow }) {
+  const cssWidth = typeof width === "number" ? `${width}px` : width;
+
   const shared = {
     display: "block",
-    width,
+    width: cssWidth,
     aspectRatio: "2/3",
     borderRadius: radius,
     cursor: onClick ? "pointer" : undefined,
   };
 
   const wrapperStyle = {
-    flex: `0 0 ${width}px`,
+    flex: `0 0 ${cssWidth}`,
+    maxWidth: cssWidth,
+    width: cssWidth,
     borderRadius: radius,
     overflow: "hidden",
     boxShadow,

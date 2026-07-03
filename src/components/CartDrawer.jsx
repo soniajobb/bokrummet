@@ -55,7 +55,7 @@ export default function CartDrawer({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "28px 30px",
+            padding: "28px clamp(16px, 6vw, 30px)",
             borderBottom: `1px solid ${colors.border1}`,
           }}
         >
@@ -71,7 +71,7 @@ export default function CartDrawer({
           </HoverButton>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px 30px" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px clamp(16px, 6vw, 30px)" }}>
           {cartBooks.length === 0 ? (
             <p style={{ margin: "36px 0", textAlign: "center", fontStyle: "italic", color: colors.textSoft2, fontSize: 16 }}>
               Din varukorg är tom.
@@ -112,7 +112,7 @@ export default function CartDrawer({
         </div>
 
         {cartBooks.length > 0 && (
-          <div style={{ padding: "24px 30px", borderTop: `1px solid ${colors.border1}` }}>
+          <div style={{ padding: "24px clamp(16px, 6vw, 30px)", borderTop: `1px solid ${colors.border1}` }}>
             {!checkedOut && (
               <div style={{ marginBottom: 18 }}>
                 <p style={{ margin: "0 0 10px", fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: colors.textMuted }}>
