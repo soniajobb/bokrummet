@@ -1,13 +1,28 @@
-import { useState } from "react";
-import { baseBooks } from "./data/books";
-import { useLocalStorageState } from "./hooks/useLocalStorageState";
+import { useEffect, useState } from "react";
 import { colors, fonts } from "./theme";
 import { priceToNumber, computeShipping, buildMailto, SELLER_EMAIL, SWISH_NUMBER_DISPLAY } from "./lib/business";
+import { supabase } from "./lib/supabaseClient";
+import AuthScreen from "./components/AuthScreen";
 import TopBar from "./components/TopBar";
 import ListView from "./components/ListView";
 import DetailView from "./components/DetailView";
 import SavedView from "./components/SavedView";
 import CartDrawer from "./components/CartDrawer";
+
+function fromRow(row) {
+  return {
+    slotB: row.slot_b,
+    title: row.title,
+    author: row.author,
+    tag: row.tag,
+    price: row.price,
+    cover: row.cover,
+    desc: row.description,
+    condition: row.condition,
+    sold: row.sold,
+    custom: row.custom,
+  };
+}
 
 const EMPTY_DRAFT = { title: "", author: "", tag: "Barnbok", price: "", desc: "", condition: "Bra skick", cover: "" };
 const EMPTY_EDIT_DRAFT = { title: "", author: "", tag: "", price: "", desc: "", condition: "" };
@@ -19,6 +34,32 @@ function normalizePrice(raw) {
 }
 
 export default function App() {
+  const [session, setSession] = useState(undefined);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session?.user) {
+      setProfile(null);
+      return;
+    }
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", session.user.id)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data) setProfile(data);
+      });
+  }, [session?.user?.id]);
+
   const [view, setView] = useState("list");
   const [selected, setSelected] = useState(0);
   const [page, setPage] = useState(0);
@@ -35,14 +76,52 @@ export default function App() {
   const [order, setOrderState] = useState({ name: "", phone: "", address: "" });
   const [orderSent, setOrderSent] = useState(false);
 
-  const [cart, setCart] = useLocalStorageState("bokrummet_cart", []);
-  const [liked, setLiked] = useLocalStorageState("bokrummet_liked", []);
-  const [sold, setSold] = useLocalStorageState("bokrummet_sold", []);
-  const [customBooks, setCustomBooks] = useLocalStorageState("bokrummet_custom_books", []);
-  const [overrides, setOverrides] = useLocalStorageState("bokrummet_overrides", {});
+  const [cart, setCartState] = useState([]);
+  const [liked, setLikedState] = useState([]);
+  const [books, setBooks] = useState([]);
 
-  const books = [...baseBooks, ...customBooks].map((b) => (overrides[b.slotB] ? { ...b, ...overrides[b.slotB] } : b));
-  const allBooks = books.map((b, i) => ({ ...b, idx: i, sold: sold.includes(i), custom: !!b.custom }));
+  useEffect(() => {
+    if (profile) {
+      setCartState(profile.cart || []);
+      setLikedState(profile.liked || []);
+    } else {
+      setCartState([]);
+      setLikedState([]);
+    }
+  }, [profile?.id]);
+
+  const setCart = (updater) => {
+    setCartState((c) => {
+      const next = typeof updater === "function" ? updater(c) : updater;
+      if (session?.user) supabase.from("profiles").update({ cart: next }).eq("id", session.user.id);
+      return next;
+    });
+  };
+  const setLiked = (updater) => {
+    setLikedState((l) => {
+      const next = typeof updater === "function" ? updater(l) : updater;
+      if (session?.user) supabase.from("profiles").update({ liked: next }).eq("id", session.user.id);
+      return next;
+    });
+  };
+
+  const fetchBooks = async () => {
+    const { data, error } = await supabase.from("books").select("*").order("created_at", { ascending: true });
+    if (!error && data) setBooks(data.map(fromRow));
+  };
+
+  useEffect(() => {
+    fetchBooks();
+    const channel = supabase
+      .channel("books-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "books" }, fetchBooks)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const allBooks = books.map((b, i) => ({ ...b, idx: i }));
 
   const scrollTop = () => window.scrollTo(0, 0);
 
@@ -67,7 +146,7 @@ export default function App() {
   };
 
   const addToCart = (i) => {
-    if (sold.includes(i)) return;
+    if (books[i]?.sold) return;
     setCart((c) => [...c, i]);
     setCartOpen(true);
   };
@@ -80,7 +159,12 @@ export default function App() {
   const checkout = () => setCheckedOut(true);
 
   const toggleLike = (i) => setLiked((l) => (l.includes(i) ? l.filter((x) => x !== i) : [...l, i]));
-  const toggleSold = (i) => setSold((s) => (s.includes(i) ? s.filter((x) => x !== i) : [...s, i]));
+  const toggleSold = async (i) => {
+    const book = books[i];
+    if (!book) return;
+    await supabase.from("books").update({ sold: !book.sold }).eq("slot_b", book.slotB);
+    fetchBooks();
+  };
   const toggleSellerMode = () => setSellerMode((v) => !v);
   const toggleAdd = () => setShowAdd((v) => !v);
 
@@ -93,25 +177,29 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  const addBook = (e) => {
+  const addBook = async (e) => {
     e.preventDefault();
     if (!draft.title.trim() || !draft.price.trim()) return;
     const book = {
+      slot_b: "custom-" + Date.now(),
       title: draft.title.trim(),
       author: draft.author.trim() || "Okänd",
       tag: draft.tag.trim() || "Barnbok",
       price: normalizePrice(draft.price),
-      desc: draft.desc.trim(),
+      description: draft.desc.trim(),
       condition: draft.condition.trim() || "Bra skick",
       cover: draft.cover || "",
-      slotB: "custom-" + Date.now(),
       custom: true,
     };
-    setCustomBooks((cb) => [...cb, book]);
     setDraftState(EMPTY_DRAFT);
     setShowAdd(false);
+    await supabase.from("books").insert(book);
+    fetchBooks();
   };
-  const removeBook = (slotB) => setCustomBooks((cb) => cb.filter((b) => b.slotB !== slotB));
+  const removeBook = async (slotB) => {
+    await supabase.from("books").delete().eq("slot_b", slotB);
+    fetchBooks();
+  };
 
   const startEdit = (slotB) => {
     const b = books.find((x) => x.slotB === slotB) || {};
@@ -127,20 +215,22 @@ export default function App() {
   };
   const setEditField = (k, v) => setEditDraftState((d) => ({ ...d, [k]: v }));
   const cancelEdit = () => setEditingSlot(null);
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingSlot) return;
-    setOverrides((ov) => ({
-      ...ov,
-      [editingSlot]: {
+    const slotB = editingSlot;
+    setEditingSlot(null);
+    await supabase
+      .from("books")
+      .update({
         title: editDraft.title.trim(),
         author: editDraft.author.trim(),
         tag: editDraft.tag.trim(),
         price: normalizePrice(editDraft.price),
-        desc: editDraft.desc.trim(),
+        description: editDraft.desc.trim(),
         condition: editDraft.condition.trim() || "Bra skick",
-      },
-    }));
-    setEditingSlot(null);
+      })
+      .eq("slot_b", slotB);
+    fetchBooks();
   };
 
   const setFormField = (k, v) => {
@@ -213,16 +303,46 @@ export default function App() {
 
   const savedBooks = liked.map((i) => allBooks[i]).filter(Boolean);
 
+  const handleLogout = async () => {
+    setView("list");
+    await supabase.auth.signOut();
+  };
+
+  if (session === undefined) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: colors.paper,
+          fontFamily: fonts.body,
+          color: colors.textSoft,
+        }}
+      >
+        Laddar…
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AuthScreen onAuthed={() => {}} />;
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: colors.paper, fontFamily: fonts.body, color: colors.textDark }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "clamp(20px, 5vw, 36px) clamp(16px, 5vw, 40px) 72px" }}>
         <TopBar
+          isSeller={!!profile?.is_seller}
           sellerMode={sellerMode}
           onToggleSeller={toggleSellerMode}
           likedCount={liked.length}
           onOpenSaved={openSaved}
           cartCount={cart.length}
           onOpenCart={toggleCart}
+          username={profile?.username}
+          onLogout={handleLogout}
         />
 
         {view === "list" && (
@@ -231,7 +351,7 @@ export default function App() {
             page={page}
             onGoPage={goPage}
             liked={liked}
-            sellerMode={sellerMode}
+            sellerMode={sellerMode && !!profile?.is_seller}
             showAdd={showAdd}
             onToggleAdd={toggleAdd}
             draft={draft}

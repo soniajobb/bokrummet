@@ -1,26 +1,51 @@
 import { colors } from "../theme";
 import HoverButton from "./HoverButton";
 
-export default function TopBar({ sellerMode, onToggleSeller, likedCount, onOpenSaved, cartCount, onOpenCart }) {
+export default function TopBar({ isSeller, sellerMode, onToggleSeller, likedCount, onOpenSaved, cartCount, onOpenCart, username, onLogout }) {
   return (
     <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 8 }}>
+      {username && (
+        <span style={{ fontSize: 13, color: colors.textMuted3, letterSpacing: ".3px" }}>Inloggad som {username}</span>
+      )}
+
+      {isSeller && (
+        <HoverButton
+          onClick={onToggleSeller}
+          title="Endast för dig som säljer"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "transparent",
+            border: "none",
+            color: sellerMode ? colors.accent : colors.textMuted3,
+            fontSize: 13,
+            letterSpacing: ".5px",
+            cursor: "pointer",
+          }}
+          hoverStyle={{ color: colors.accent }}
+        >
+          ⚙ {sellerMode ? "Säljarläge: på" : "Säljarläge"}
+        </HoverButton>
+      )}
+
       <HoverButton
-        onClick={onToggleSeller}
-        title="Endast för dig som säljer"
+        onClick={onLogout}
         style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: 6,
           background: "transparent",
           border: "none",
-          color: sellerMode ? colors.accent : colors.textMuted3,
+          color: colors.textMuted3,
           fontSize: 13,
           letterSpacing: ".5px",
           cursor: "pointer",
+          textDecoration: "underline",
+          textUnderlineOffset: "3px",
         }}
         hoverStyle={{ color: colors.accent }}
       >
-        ⚙ {sellerMode ? "Säljarläge: på" : "Säljarläge"}
+        Logga ut
       </HoverButton>
 
       <HoverButton
