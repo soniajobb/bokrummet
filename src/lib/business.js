@@ -1,4 +1,4 @@
-export const SELLER_EMAIL = "sonia.esmaeili10@gmail.com";
+export const SELLER_EMAIL = "soniasommarjobb@gmail.com";
 export const SWISH_NUMBER_DISPLAY = "076 941 01 20";
 export const SWISH_NUMBER_DEEPLINK = "46769410120";
 export const FREE_SHIPPING_THRESHOLD = 150;
