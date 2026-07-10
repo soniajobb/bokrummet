@@ -111,10 +111,9 @@ export default function CartDrawer({
               ))}
             </div>
           )}
-        </div>
 
-        {cartBooks.length > 0 && (
-          <div style={{ padding: "24px clamp(16px, 6vw, 30px)", borderTop: `1px solid ${colors.border1}` }}>
+          {cartBooks.length > 0 && (
+          <div style={{ padding: "24px 0 4px", marginTop: 8, borderTop: `1px solid ${colors.border1}` }}>
             {!checkedOut && (
               <div style={{ marginBottom: 18 }}>
                 <p style={{ margin: "0 0 10px", fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: colors.textMuted }}>
@@ -165,8 +164,8 @@ export default function CartDrawer({
                 </p>
                 <p style={{ margin: "6px 2px 0", fontSize: 13, lineHeight: 1.5, color: colors.textSoft2 }}>
                   {shipping === "post"
-                    ? "Skriv din adress i “Fråga om boken”. Bor du nära åker Sonia och lämnar boken själv — bor du längre bort skickas den med post. Hon hör av sig om vad som passar."
-                    : "Skriv i “Fråga om boken” ungefär var du finns, så kommer ni överens om plats och tid för hämtning."}
+                    ? "Skriv din adress i beställningen nedan, så skickar Sonia boken dit."
+                    : "Skriv ungefär var du finns i beställningen nedan, så kommer ni överens om plats och tid för hämtning."}
                 </p>
               </div>
             )}
@@ -331,7 +330,8 @@ export default function CartDrawer({
               </div>
             )}
           </div>
-        )}
+          )}
+        </div>
       </aside>
     </div>
   );
