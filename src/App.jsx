@@ -177,7 +177,6 @@ export default function App() {
     setCheckedOut(false);
   };
   const backToCart = () => setCheckedOut(false);
-  const checkout = () => setCheckedOut(true);
 
   const toggleLike = (i) => setLiked((l) => (l.includes(i) ? l.filter((x) => x !== i) : [...l, i]));
   const toggleSold = async (i) => {
@@ -320,6 +319,7 @@ export default function App() {
     try {
       await sendEmail({ subject, name: order.name, message: body });
       setOrderSent(true);
+      setCheckedOut(true);
     } catch {
       setOrderError("Kunde inte skicka beställningen just nu. Testa igen, eller mejla direkt till " + SELLER_EMAIL + ".");
     } finally {
@@ -439,7 +439,6 @@ export default function App() {
         freeShip={freeShip}
         total={total}
         checkedOut={checkedOut}
-        onCheckout={checkout}
         onBackToCart={backToCart}
         order={order}
         onOrderChange={setOrderField}
