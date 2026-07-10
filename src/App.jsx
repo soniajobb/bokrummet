@@ -93,14 +93,30 @@ export default function App() {
   const setCart = (updater) => {
     setCartState((c) => {
       const next = typeof updater === "function" ? updater(c) : updater;
-      if (session?.user) supabase.from("profiles").update({ cart: next }).eq("id", session.user.id);
+      if (session?.user) {
+        supabase
+          .from("profiles")
+          .update({ cart: next })
+          .eq("id", session.user.id)
+          .then(({ error }) => {
+            if (error) console.error("Kunde inte spara varukorgen:", error);
+          });
+      }
       return next;
     });
   };
   const setLiked = (updater) => {
     setLikedState((l) => {
       const next = typeof updater === "function" ? updater(l) : updater;
-      if (session?.user) supabase.from("profiles").update({ liked: next }).eq("id", session.user.id);
+      if (session?.user) {
+        supabase
+          .from("profiles")
+          .update({ liked: next })
+          .eq("id", session.user.id)
+          .then(({ error }) => {
+            if (error) console.error("Kunde inte spara sparade böcker:", error);
+          });
+      }
       return next;
     });
   };
