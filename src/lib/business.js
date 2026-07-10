@@ -18,21 +18,21 @@ export function computeShipping(booksTotal, shipping) {
   return { freeShip, shipCost, total: booksTotal + shipCost };
 }
 
-export function buildSwishLink(amount) {
+export function buildSwishLink(amount, message = "Bokrummet") {
   return (
-    "https://app.swish.nu/1/p/?sw=" +
+    "https://app.swish.nu/1/p/sw/?sw=" +
     SWISH_NUMBER_DEEPLINK +
     "&amt=" +
     amount +
     "&cur=SEK&msg=" +
-    encodeURIComponent("Bokrummet")
+    encodeURIComponent(message)
   );
 }
 
-export function buildSwishQrUrl(amount) {
+export function buildSwishQrUrl(amount, message) {
   return (
     "https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=0&data=" +
-    encodeURIComponent(buildSwishLink(amount))
+    encodeURIComponent(buildSwishLink(amount, message))
   );
 }
 

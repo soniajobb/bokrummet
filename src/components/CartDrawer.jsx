@@ -32,6 +32,7 @@ export default function CartDrawer({
   if (!open) return null;
 
   const shipLabel = shipping === "post" ? "Skicka hem" : "Hämtas / möts upp";
+  const swishMessage = cartBooks.map((b) => b.title).join(", ").slice(0, 50) || "Bokrummet";
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50 }}>
@@ -242,7 +243,7 @@ export default function CartDrawer({
                   </p>
                   <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
                     <div style={{ background: "#fff", padding: 12, borderRadius: 12, border: `1px solid ${colors.border1}` }}>
-                      <img src={buildSwishQrUrl(total)} alt="Swish QR-kod" style={{ display: "block", width: 180, height: 180 }} />
+                      <img src={buildSwishQrUrl(total, swishMessage)} alt="Swish QR-kod" style={{ display: "block", width: 180, height: 180 }} />
                     </div>
                   </div>
                   <div style={{ background: colors.card, border: `1px solid ${colors.border2}`, borderRadius: 10, padding: "14px 16px", textAlign: "left", marginBottom: 14 }}>
@@ -260,11 +261,11 @@ export default function CartDrawer({
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                       <span style={{ fontSize: 13, letterSpacing: ".5px", color: colors.textSoft2 }}>Meddelande</span>
-                      <span style={{ fontSize: 15, color: colors.textDark }}>Bokrummet</span>
+                      <span style={{ fontSize: 15, color: colors.textDark, textAlign: "right" }}>{swishMessage}</span>
                     </div>
                   </div>
                   <a
-                    href={buildSwishLink(total)}
+                    href={buildSwishLink(total, swishMessage)}
                     style={{
                       display: "block",
                       width: "100%",
