@@ -1,7 +1,6 @@
 import { colors, fonts } from "../theme";
 import HoverButton from "./HoverButton";
 import CoverImage from "./CoverImage";
-import { SELLER_EMAIL } from "../lib/business";
 
 const fieldStyle = {
   background: colors.card,
@@ -21,6 +20,8 @@ export default function DetailView({
   form,
   onFormChange,
   sent,
+  sending,
+  error,
   onSubmit,
 }) {
   if (!book) return null;
@@ -224,6 +225,7 @@ export default function DetailView({
             />
             <HoverButton
               type="submit"
+              disabled={sending}
               style={{
                 alignSelf: "flex-start",
                 background: colors.accent,
@@ -233,16 +235,17 @@ export default function DetailView({
                 borderRadius: 999,
                 fontSize: 15,
                 letterSpacing: ".5px",
-                cursor: "pointer",
+                cursor: sending ? "default" : "pointer",
                 fontFamily: fonts.body,
+                opacity: sending ? 0.7 : 1,
               }}
               hoverStyle={{ background: colors.accentHover }}
             >
-              Skicka meddelande
+              {sending ? "Skickar…" : "Skicka meddelande"}
             </HoverButton>
-            <p style={{ margin: "2px 0 0", fontSize: 13, color: colors.textMuted2 }}>
-              När du trycker skicka öppnas din e-post med meddelandet färdigt till Sonia.
-            </p>
+            {error && (
+              <p style={{ margin: "2px 0 0", fontSize: 14, color: colors.soldBadge }}>{error}</p>
+            )}
           </form>
         ) : (
           <div style={{ background: colors.card, border: `1px solid ${colors.border2}`, borderRadius: 8, padding: "28px 30px" }}>
@@ -250,12 +253,7 @@ export default function DetailView({
               Tack, {form.name}!
             </p>
             <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: colors.textSoft3 }}>
-              Ditt e-postprogram har öppnats med meddelandet färdigt. Tryck bara på skicka där, så når det Sonia.
-              Hörs inget fönster upp? Mejla direkt till{" "}
-              <a href={`mailto:${SELLER_EMAIL}`} style={{ color: colors.accent }}>
-                {SELLER_EMAIL}
-              </a>
-              .
+              Ditt meddelande har skickats till Sonia. Hon svarar så snart hon kan.
             </p>
           </div>
         )}

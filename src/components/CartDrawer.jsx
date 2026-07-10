@@ -26,6 +26,8 @@ export default function CartDrawer({
   order,
   onOrderChange,
   orderSent,
+  sendingOrder,
+  orderError,
   onSubmitOrder,
 }) {
   if (!open) return null;
@@ -275,6 +277,7 @@ export default function CartDrawer({
                         />
                         <HoverButton
                           type="submit"
+                          disabled={sendingOrder}
                           style={{
                             background: colors.textDark,
                             color: colors.paper,
@@ -283,16 +286,17 @@ export default function CartDrawer({
                             borderRadius: 999,
                             fontSize: 15,
                             letterSpacing: ".5px",
-                            cursor: "pointer",
+                            cursor: sendingOrder ? "default" : "pointer",
                             fontFamily: fonts.body,
+                            opacity: sendingOrder ? 0.7 : 1,
                           }}
                           hoverStyle={{ background: colors.accent }}
                         >
-                          Skicka beställning
+                          {sendingOrder ? "Skickar…" : "Skicka beställning"}
                         </HoverButton>
-                        <p style={{ margin: "2px 0 0", fontSize: 12, lineHeight: 1.5, color: colors.textMuted2 }}>
-                          Öppnar din e-post med hela beställningen färdig till Sonia.
-                        </p>
+                        {orderError && (
+                          <p style={{ margin: "2px 0 0", fontSize: 13, lineHeight: 1.5, color: colors.soldBadge }}>{orderError}</p>
+                        )}
                       </form>
                     </>
                   ) : (
@@ -301,7 +305,7 @@ export default function CartDrawer({
                         Tack, {order.name}!
                       </p>
                       <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: colors.textSoft3 }}>
-                        Din beställning har öppnats i din e-post — tryck skicka där. Swisha {total} kr till {SWISH_NUMBER_DISPLAY}, så hör Sonia av sig.
+                        Din beställning har skickats till Sonia. Swisha {total} kr till {SWISH_NUMBER_DISPLAY}, så hör hon av sig.
                       </p>
                     </>
                   )}

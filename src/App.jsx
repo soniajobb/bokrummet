@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { colors, fonts } from "./theme";
-import { priceToNumber, computeShipping, buildMailto, SELLER_EMAIL, SWISH_NUMBER_DISPLAY } from "./lib/business";
+import { priceToNumber, computeShipping, SELLER_EMAIL, SWISH_NUMBER_DISPLAY } from "./lib/business";
+import { sendEmail } from "./lib/email";
 import { supabase } from "./lib/supabaseClient";
 import AuthScreen from "./components/AuthScreen";
 import TopBar from "./components/TopBar";
@@ -73,8 +74,12 @@ export default function App() {
   const [shipping, setShipping] = useState("pickup");
   const [form, setFormState] = useState({ name: "", email: "", msg: "" });
   const [sent, setSent] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [messageError, setMessageError] = useState("");
   const [order, setOrderState] = useState({ name: "", phone: "", address: "" });
   const [orderSent, setOrderSent] = useState(false);
+  const [sendingOrder, setSendingOrder] = useState(false);
+  const [orderError, setOrderError] = useState("");
 
   const [cart, setCartState] = useState([]);
   const [liked, setLikedState] = useState([]);
@@ -252,13 +257,13 @@ export default function App() {
   const setFormField = (k, v) => {
     setFormState((f) => ({ ...f, [k]: v }));
     setSent(false);
+    setMessageError("");
   };
-  const submitMessage = (e) => {
+  const submitMessage = async (e) => {
     e.preventDefault();
     const book = books[selected] || {};
     const subject = "Fråga om boken: " + (book.title || "Bokrummet");
     const body =
-      "Hej Sonia,\n\n" +
       (form.msg || "") +
       "\n\n— — —\nGäller boken: " +
       (book.title || "") +
@@ -266,19 +271,24 @@ export default function App() {
       (form.name || "") +
       "\nE-post: " +
       (form.email || "");
+    setMessageError("");
+    setSendingMessage(true);
     try {
-      window.location.href = buildMailto(SELLER_EMAIL, subject, body);
+      await sendEmail({ subject, name: form.name, email: form.email, message: body });
+      setSent(true);
     } catch {
-      // ignore
+      setMessageError("Kunde inte skicka meddelandet just nu. Testa igen, eller mejla direkt till " + SELLER_EMAIL + ".");
+    } finally {
+      setSendingMessage(false);
     }
-    setSent(true);
   };
 
   const setOrderField = (k, v) => {
     setOrderState((o) => ({ ...o, [k]: v }));
     setOrderSent(false);
+    setOrderError("");
   };
-  const submitOrder = (e) => {
+  const submitOrder = async (e) => {
     e.preventDefault();
     const lines = cart.map((i) => "• " + books[i].title + " – " + books[i].price).join("\n");
     const booksTotal = cart.reduce((sum, i) => sum + priceToNumber(books[i].price), 0);
@@ -286,7 +296,7 @@ export default function App() {
     const shipLabel = shipping === "post" ? "Skicka hem" : "Hämtas / möts upp";
     const subject = "Ny beställning – Bokrummet";
     const body =
-      "Hej Sonia,\n\nJag vill beställa:\n" +
+      "Jag vill beställa:\n" +
       lines +
       "\n\nLeverans: " +
       shipLabel +
@@ -305,12 +315,16 @@ export default function App() {
       " kr till " +
       SWISH_NUMBER_DISPLAY +
       ".";
+    setOrderError("");
+    setSendingOrder(true);
     try {
-      window.location.href = buildMailto(SELLER_EMAIL, subject, body);
+      await sendEmail({ subject, name: order.name, message: body });
+      setOrderSent(true);
     } catch {
-      // ignore
+      setOrderError("Kunde inte skicka beställningen just nu. Testa igen, eller mejla direkt till " + SELLER_EMAIL + ".");
+    } finally {
+      setSendingOrder(false);
     }
-    setOrderSent(true);
   };
 
   const cartBooks = cart.map((i, pos) => ({ ...books[i], pos }));
@@ -408,6 +422,8 @@ export default function App() {
             form={form}
             onFormChange={setFormField}
             sent={sent}
+            sending={sendingMessage}
+            error={messageError}
             onSubmit={submitMessage}
           />
         )}
@@ -428,6 +444,8 @@ export default function App() {
         order={order}
         onOrderChange={setOrderField}
         orderSent={orderSent}
+        sendingOrder={sendingOrder}
+        orderError={orderError}
         onSubmitOrder={submitOrder}
       />
     </div>
