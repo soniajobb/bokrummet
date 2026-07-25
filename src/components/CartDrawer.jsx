@@ -20,14 +20,14 @@ export default function CartDrawer({
   onSetShipping,
   freeShip,
   total,
-  checkedOut,
+  checkoutStep,
   onBackToCart,
   order,
   onOrderChange,
-  orderSent,
   sendingOrder,
   orderError,
-  onSubmitOrder,
+  onGoToPayment,
+  onConfirmPayment,
 }) {
   if (!open) return null;
 
@@ -74,7 +74,16 @@ export default function CartDrawer({
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "8px clamp(16px, 6vw, 30px)" }}>
-          {cartBooks.length === 0 ? (
+          {checkoutStep === "done" ? (
+            <div style={{ textAlign: "center", margin: "36px 0" }}>
+              <p style={{ margin: "0 0 6px", fontFamily: fonts.heading, fontWeight: 600, fontSize: 22, color: colors.textDark }}>
+                Tack, {order.name}!
+              </p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: colors.textSoft3 }}>
+                Din beställning är mottagen. Sonia hör av sig om något är oklart.
+              </p>
+            </div>
+          ) : cartBooks.length === 0 ? (
             <p style={{ margin: "36px 0", textAlign: "center", fontStyle: "italic", color: colors.textSoft2, fontSize: 16 }}>
               Din varukorg är tom.
             </p>
@@ -112,9 +121,9 @@ export default function CartDrawer({
             </div>
           )}
 
-          {cartBooks.length > 0 && (
+          {checkoutStep !== "done" && cartBooks.length > 0 && (
             <div style={{ padding: "24px 0 4px", marginTop: 8, borderTop: `1px solid ${colors.border1}` }}>
-              {!checkedOut ? (
+              {checkoutStep === "cart" ? (
                 <>
                   <div style={{ marginBottom: 18 }}>
                     <p style={{ margin: "0 0 10px", fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: colors.textMuted }}>
@@ -178,7 +187,7 @@ export default function CartDrawer({
                   <p style={{ margin: "0 0 10px", fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: colors.textMuted }}>
                     Dina uppgifter
                   </p>
-                  <form onSubmit={onSubmitOrder} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <form onSubmit={onGoToPayment} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     <input
                       value={order.name}
                       onChange={(e) => onOrderChange("name", e.target.value)}
@@ -200,7 +209,6 @@ export default function CartDrawer({
                     />
                     <HoverButton
                       type="submit"
-                      disabled={sendingOrder}
                       style={{
                         background: colors.accent,
                         color: colors.paper,
@@ -209,32 +217,17 @@ export default function CartDrawer({
                         borderRadius: 999,
                         fontSize: 16,
                         letterSpacing: ".5px",
-                        cursor: sendingOrder ? "default" : "pointer",
+                        cursor: "pointer",
                         fontFamily: fonts.body,
-                        opacity: sendingOrder ? 0.7 : 1,
                       }}
                       hoverStyle={{ background: colors.accentHover }}
                     >
-                      {sendingOrder ? "Skickar…" : "Skicka beställning"}
+                      Fortsätt till betalning
                     </HoverButton>
-                    {orderError && (
-                      <p style={{ margin: "2px 0 0", fontSize: 13, lineHeight: 1.5, color: colors.soldBadge }}>{orderError}</p>
-                    )}
                   </form>
                 </>
-              ) : (
+              ) : checkoutStep === "payment" ? (
                 <div style={{ textAlign: "center" }}>
-                  {orderSent && (
-                    <div style={{ marginBottom: 20 }}>
-                      <p style={{ margin: "0 0 6px", fontFamily: fonts.heading, fontWeight: 600, fontSize: 22, color: colors.textDark }}>
-                        Tack, {order.name}!
-                      </p>
-                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: colors.textSoft3 }}>
-                        Din beställning har skickats till Sonia.
-                      </p>
-                    </div>
-                  )}
-
                   <p style={{ margin: "0 0 4px", fontFamily: fonts.heading, fontWeight: 600, fontSize: 24, color: colors.textDark }}>
                     Betala med Swish
                   </p>
@@ -279,10 +272,37 @@ export default function CartDrawer({
                       letterSpacing: ".5px",
                       textDecoration: "none",
                       textAlign: "center",
+                      marginBottom: 10,
                     }}
                   >
                     Öppna Swish-appen
                   </a>
+
+                  <HoverButton
+                    onClick={onConfirmPayment}
+                    disabled={sendingOrder}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      boxSizing: "border-box",
+                      background: colors.textDark,
+                      color: colors.paper,
+                      border: "none",
+                      padding: 15,
+                      borderRadius: 999,
+                      fontSize: 15,
+                      letterSpacing: ".5px",
+                      cursor: sendingOrder ? "default" : "pointer",
+                      fontFamily: fonts.body,
+                      opacity: sendingOrder ? 0.7 : 1,
+                    }}
+                    hoverStyle={{ background: colors.accentHover }}
+                  >
+                    {sendingOrder ? "Bekräftar…" : "Jag har betalat"}
+                  </HoverButton>
+                  {orderError && (
+                    <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.5, color: colors.soldBadge }}>{orderError}</p>
+                  )}
 
                   <HoverButton
                     onClick={onBackToCart}
@@ -302,7 +322,7 @@ export default function CartDrawer({
                     ← Tillbaka till varukorgen
                   </HoverButton>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
         </div>

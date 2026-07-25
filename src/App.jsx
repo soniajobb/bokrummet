@@ -70,14 +70,13 @@ export default function App() {
   const [editingSlot, setEditingSlot] = useState(null);
   const [editDraft, setEditDraftState] = useState(EMPTY_EDIT_DRAFT);
   const [cartOpen, setCartOpen] = useState(false);
-  const [checkedOut, setCheckedOut] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState("cart");
   const [shipping, setShipping] = useState("pickup");
   const [form, setFormState] = useState({ name: "", email: "", msg: "" });
   const [sent, setSent] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [messageError, setMessageError] = useState("");
   const [order, setOrderState] = useState({ name: "", phone: "", address: "" });
-  const [orderSent, setOrderSent] = useState(false);
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderError, setOrderError] = useState("");
 
@@ -174,9 +173,9 @@ export default function App() {
   const removeFromCart = (pos) => setCart((c) => c.filter((_, k) => k !== pos));
   const toggleCart = () => {
     setCartOpen((v) => !v);
-    setCheckedOut(false);
+    setCheckoutStep("cart");
   };
-  const backToCart = () => setCheckedOut(false);
+  const backToCart = () => setCheckoutStep("cart");
 
   const toggleLike = (i) => setLiked((l) => (l.includes(i) ? l.filter((x) => x !== i) : [...l, i]));
   const toggleSold = async (i) => {
@@ -284,13 +283,19 @@ export default function App() {
 
   const setOrderField = (k, v) => {
     setOrderState((o) => ({ ...o, [k]: v }));
-    setOrderSent(false);
     setOrderError("");
   };
-  const submitOrder = async (e) => {
+
+  const goToPayment = (e) => {
     e.preventDefault();
-    const lines = cart.map((i) => "• " + books[i].title + " – " + books[i].price).join("\n");
-    const booksTotal = cart.reduce((sum, i) => sum + priceToNumber(books[i].price), 0);
+    setOrderError("");
+    setCheckoutStep("payment");
+  };
+
+  const confirmPayment = async () => {
+    const cartSnapshot = cart;
+    const lines = cartSnapshot.map((i) => "• " + books[i].title + " – " + books[i].price).join("\n");
+    const booksTotal = cartSnapshot.reduce((sum, i) => sum + priceToNumber(books[i].price), 0);
     const { shipCost, total } = computeShipping(booksTotal, shipping);
     const shipLabel = shipping === "post" ? "Skicka hem" : "Hämtas / möts upp";
     const subject = "Ny beställning – Bokrummet";
@@ -318,10 +323,15 @@ export default function App() {
     setSendingOrder(true);
     try {
       await sendEmail({ subject, name: order.name, message: body });
-      setOrderSent(true);
-      setCheckedOut(true);
+      await Promise.all(
+        cartSnapshot.map((i) => supabase.from("books").update({ sold: true }).eq("slot_b", books[i].slotB))
+      );
+      fetchBooks();
+
+      setCheckoutStep("done");
+      setCart([]);
     } catch {
-      setOrderError("Kunde inte skicka beställningen just nu. Testa igen, eller mejla direkt till " + SELLER_EMAIL + ".");
+      setOrderError("Kunde inte slutföra beställningen just nu. Testa igen, eller mejla direkt till " + SELLER_EMAIL + ".");
     } finally {
       setSendingOrder(false);
     }
@@ -438,14 +448,14 @@ export default function App() {
         onSetShipping={setShipping}
         freeShip={freeShip}
         total={total}
-        checkedOut={checkedOut}
+        checkoutStep={checkoutStep}
         onBackToCart={backToCart}
         order={order}
         onOrderChange={setOrderField}
-        orderSent={orderSent}
         sendingOrder={sendingOrder}
         orderError={orderError}
-        onSubmitOrder={submitOrder}
+        onGoToPayment={goToPayment}
+        onConfirmPayment={confirmPayment}
       />
     </div>
   );
