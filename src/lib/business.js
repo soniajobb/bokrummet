@@ -36,6 +36,12 @@ export function buildSwishQrUrl(amount, message) {
   );
 }
 
+export function isValidSwedishPhone(phone) {
+  const digits = String(phone || "").replace(/[^0-9+]/g, "");
+  const local = digits.replace(/^\+46/, "0").replace(/^0046/, "0");
+  return /^0\d{8,9}$/.test(local);
+}
+
 export function buildMailto(to, subject, body) {
   return (
     "mailto:" +

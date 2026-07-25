@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { colors, fonts } from "./theme";
-import { priceToNumber, computeShipping, SELLER_EMAIL, SWISH_NUMBER_DISPLAY } from "./lib/business";
+import { priceToNumber, computeShipping, isValidSwedishPhone, SELLER_EMAIL, SWISH_NUMBER_DISPLAY } from "./lib/business";
 import { sendEmail } from "./lib/email";
 import { supabase } from "./lib/supabaseClient";
 import AuthScreen from "./components/AuthScreen";
@@ -77,6 +77,7 @@ export default function App() {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [messageError, setMessageError] = useState("");
   const [order, setOrderState] = useState({ name: "", phone: "", address: "" });
+  const [orderSummary, setOrderSummary] = useState(null);
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderError, setOrderError] = useState("");
 
@@ -175,7 +176,6 @@ export default function App() {
     setCartOpen((v) => !v);
     setCheckoutStep("cart");
   };
-  const backToCart = () => setCheckoutStep("cart");
 
   const toggleLike = (i) => setLiked((l) => (l.includes(i) ? l.filter((x) => x !== i) : [...l, i]));
   const toggleSold = async (i) => {
@@ -286,18 +286,18 @@ export default function App() {
     setOrderError("");
   };
 
-  const goToPayment = (e) => {
+  const submitOrder = async (e) => {
     e.preventDefault();
-    setOrderError("");
-    setCheckoutStep("payment");
-  };
-
-  const confirmPayment = async () => {
+    if (!isValidSwedishPhone(order.phone)) {
+      setOrderError("Ange ett giltigt telefonnummer, t.ex. 070-123 45 67.");
+      return;
+    }
     const cartSnapshot = cart;
     const lines = cartSnapshot.map((i) => "• " + books[i].title + " – " + books[i].price).join("\n");
     const booksTotal = cartSnapshot.reduce((sum, i) => sum + priceToNumber(books[i].price), 0);
     const { shipCost, total } = computeShipping(booksTotal, shipping);
     const shipLabel = shipping === "post" ? "Skicka hem" : "Hämtas / möts upp";
+    const swishMessage = cartSnapshot.map((i) => books[i].title).join(", ").slice(0, 50) || "Bokrummet";
     const subject = "Ny beställning – Bokrummet";
     const body =
       "Jag vill beställa:\n" +
@@ -328,6 +328,7 @@ export default function App() {
       );
       fetchBooks();
 
+      setOrderSummary({ total, shipLabel, swishMessage });
       setCheckoutStep("done");
       setCart([]);
     } catch {
@@ -449,13 +450,12 @@ export default function App() {
         freeShip={freeShip}
         total={total}
         checkoutStep={checkoutStep}
-        onBackToCart={backToCart}
         order={order}
         onOrderChange={setOrderField}
+        orderSummary={orderSummary}
         sendingOrder={sendingOrder}
         orderError={orderError}
-        onGoToPayment={goToPayment}
-        onConfirmPayment={confirmPayment}
+        onSubmitOrder={submitOrder}
       />
     </div>
   );
