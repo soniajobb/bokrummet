@@ -21,7 +21,7 @@ export default function AuthScreen({ onAuthed }) {
   const [notice, setNotice] = useState("");
 
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
-  const [signupForm, setSignupForm] = useState({ email: "", phone: "", username: "", password: "" });
+  const [signupForm, setSignupForm] = useState({ fullName: "", email: "", phone: "", username: "", password: "" });
   const [forgotForm, setForgotForm] = useState({ username: "" });
 
   const switchMode = (m) => {
@@ -65,8 +65,8 @@ export default function AuthScreen({ onAuthed }) {
     e.preventDefault();
     setError("");
     setNotice("");
-    const { email, phone, username, password } = signupForm;
-    if (!email.trim() || !phone.trim() || !username.trim() || !password) {
+    const { fullName, email, phone, username, password } = signupForm;
+    if (!fullName.trim() || !email.trim() || !phone.trim() || !username.trim() || !password) {
       setError("Fyll i alla fält.");
       return;
     }
@@ -79,7 +79,7 @@ export default function AuthScreen({ onAuthed }) {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { username: username.trim(), phone: phone.trim() } },
+        options: { data: { username: username.trim(), phone: phone.trim(), full_name: fullName.trim() } },
       });
       if (signUpError) {
         if (/registered/i.test(signUpError.message)) {
@@ -265,6 +265,12 @@ export default function AuthScreen({ onAuthed }) {
           </form>
         ) : mode === "signup" ? (
           <form onSubmit={handleSignup} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <input
+              value={signupForm.fullName}
+              onChange={(e) => setSignupForm((f) => ({ ...f, fullName: e.target.value }))}
+              placeholder="Fullständigt namn"
+              style={fieldStyle}
+            />
             <input
               type="email"
               value={signupForm.email}

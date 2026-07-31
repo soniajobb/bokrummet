@@ -6,6 +6,8 @@ create table if not exists public.profiles (
   username text unique not null,
   phone text,
   email text,
+  full_name text,
+  address text,
   is_seller boolean not null default false,
   cart jsonb not null default '[]'::jsonb,
   liked jsonb not null default '[]'::jsonb,
@@ -27,12 +29,13 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, username, phone, email)
+  insert into public.profiles (id, username, phone, email, full_name)
   values (
     new.id,
     new.raw_user_meta_data->>'username',
     new.raw_user_meta_data->>'phone',
-    new.email
+    new.email,
+    new.raw_user_meta_data->>'full_name'
   );
   return new;
 end;

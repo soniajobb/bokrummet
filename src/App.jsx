@@ -93,6 +93,11 @@ export default function App() {
     if (profile) {
       setCartState(profile.cart || []);
       setLikedState(profile.liked || []);
+      setOrderState({
+        name: profile.full_name || "",
+        phone: profile.phone || "",
+        address: profile.address || "",
+      });
     } else {
       setCartState([]);
       setLikedState([]);
@@ -335,6 +340,16 @@ export default function App() {
         cartSnapshot.map((i) => supabase.from("books").update({ sold: true }).eq("slot_b", books[i].slotB))
       );
       fetchBooks();
+
+      if (session?.user) {
+        supabase
+          .from("profiles")
+          .update({ full_name: order.name, phone: order.phone, address: order.address })
+          .eq("id", session.user.id)
+          .then(({ error }) => {
+            if (error) console.error("Kunde inte spara kunduppgifter:", error);
+          });
+      }
 
       setOrderSummary({ total, shipLabel, swishMessage });
       setCheckoutStep("done");
