@@ -1,11 +1,11 @@
 import { colors } from "../theme";
 import HoverButton from "./HoverButton";
 
-export default function TopBar({ isSeller, sellerMode, onToggleSeller, likedCount, onOpenSaved, cartCount, onOpenCart, username, onLogout }) {
+export default function TopBar({ isSeller, sellerMode, onToggleSeller, likedCount, onOpenSaved, cartCount, onOpenCart, displayName, onLogout }) {
   return (
     <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 8 }}>
-      {username && (
-        <span style={{ fontSize: 13, color: colors.textMuted3, letterSpacing: ".3px" }}>Inloggad som {username}</span>
+      {displayName && (
+        <span style={{ fontSize: 13, color: colors.textMuted3, letterSpacing: ".3px" }}>Inloggad som {displayName}</span>
       )}
 
       {isSeller && (

@@ -409,7 +409,7 @@ export default function App() {
           onOpenSaved={openSaved}
           cartCount={cart.length}
           onOpenCart={toggleCart}
-          username={profile?.username}
+          displayName={profile?.full_name || profile?.email}
           onLogout={handleLogout}
         />
 

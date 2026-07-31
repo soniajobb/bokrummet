@@ -20,9 +20,9 @@ export default function AuthScreen({ onAuthed }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
-  const [signupForm, setSignupForm] = useState({ fullName: "", email: "", phone: "", username: "", password: "" });
-  const [forgotForm, setForgotForm] = useState({ username: "" });
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [signupForm, setSignupForm] = useState({ fullName: "", email: "", phone: "", password: "" });
+  const [forgotForm, setForgotForm] = useState({ email: "" });
 
   const switchMode = (m) => {
     setMode(m);
@@ -34,25 +34,18 @@ export default function AuthScreen({ onAuthed }) {
     e.preventDefault();
     setError("");
     setNotice("");
-    if (!loginForm.username.trim() || !loginForm.password) {
-      setError("Fyll i användarnamn och lösenord.");
+    if (!loginForm.email.trim() || !loginForm.password) {
+      setError("Fyll i e-post och lösenord.");
       return;
     }
     setLoading(true);
     try {
-      const { data: email, error: lookupError } = await supabase.rpc("get_email_by_username", {
-        uname: loginForm.username.trim(),
-      });
-      if (lookupError || !email) {
-        setError("Fel användarnamn eller lösenord.");
-        return;
-      }
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: loginForm.email.trim(),
         password: loginForm.password,
       });
       if (signInError) {
-        setError("Fel användarnamn eller lösenord.");
+        setError("Fel e-post eller lösenord.");
         return;
       }
       onAuthed?.();
@@ -65,8 +58,8 @@ export default function AuthScreen({ onAuthed }) {
     e.preventDefault();
     setError("");
     setNotice("");
-    const { fullName, email, phone, username, password } = signupForm;
-    if (!fullName.trim() || !email.trim() || !phone.trim() || !username.trim() || !password) {
+    const { fullName, email, phone, password } = signupForm;
+    if (!fullName.trim() || !email.trim() || !phone.trim() || !password) {
       setError("Fyll i alla fält.");
       return;
     }
@@ -79,13 +72,11 @@ export default function AuthScreen({ onAuthed }) {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { username: username.trim(), phone: phone.trim(), full_name: fullName.trim() } },
+        options: { data: { phone: phone.trim(), full_name: fullName.trim() } },
       });
       if (signUpError) {
         if (/registered/i.test(signUpError.message)) {
           setError("Den e-postadressen är redan registrerad.");
-        } else if (/duplicate|unique/i.test(signUpError.message)) {
-          setError("Det användarnamnet är redan taget.");
         } else {
           setError(signUpError.message);
         }
@@ -106,18 +97,15 @@ export default function AuthScreen({ onAuthed }) {
     e.preventDefault();
     setError("");
     setNotice("");
-    if (!forgotForm.username.trim()) {
-      setError("Fyll i ditt användarnamn.");
+    if (!forgotForm.email.trim()) {
+      setError("Fyll i din e-postadress.");
       return;
     }
     setLoading(true);
     try {
-      const { data: email } = await supabase.rpc("get_email_by_username", {
-        uname: forgotForm.username.trim(),
+      await supabase.auth.resetPasswordForEmail(forgotForm.email.trim(), {
+        redirectTo: window.location.origin,
       });
-      if (email) {
-        await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
-      }
       setNotice("Om kontot finns skickar vi en återställningslänk till din e-post.");
       setMode("login");
     } finally {
@@ -211,9 +199,10 @@ export default function AuthScreen({ onAuthed }) {
         {mode === "login" ? (
           <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input
-              value={loginForm.username}
-              onChange={(e) => setLoginForm((f) => ({ ...f, username: e.target.value }))}
-              placeholder="Användarnamn"
+              type="email"
+              value={loginForm.email}
+              onChange={(e) => setLoginForm((f) => ({ ...f, email: e.target.value }))}
+              placeholder="E-post"
               style={fieldStyle}
             />
             <input
@@ -286,12 +275,6 @@ export default function AuthScreen({ onAuthed }) {
               style={fieldStyle}
             />
             <input
-              value={signupForm.username}
-              onChange={(e) => setSignupForm((f) => ({ ...f, username: e.target.value }))}
-              placeholder="Användarnamn"
-              style={fieldStyle}
-            />
-            <input
               type="password"
               value={signupForm.password}
               onChange={(e) => setSignupForm((f) => ({ ...f, password: e.target.value }))}
@@ -322,12 +305,13 @@ export default function AuthScreen({ onAuthed }) {
         ) : (
           <form onSubmit={handleForgot} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <p style={{ margin: "0 0 4px", fontSize: 14, lineHeight: 1.6, color: colors.textSoft }}>
-              Skriv ditt användarnamn så skickar vi en återställningslänk till e-postadressen kopplad till kontot.
+              Skriv din e-postadress så skickar vi en återställningslänk dit.
             </p>
             <input
-              value={forgotForm.username}
-              onChange={(e) => setForgotForm((f) => ({ ...f, username: e.target.value }))}
-              placeholder="Användarnamn"
+              type="email"
+              value={forgotForm.email}
+              onChange={(e) => setForgotForm((f) => ({ ...f, email: e.target.value }))}
+              placeholder="E-post"
               style={fieldStyle}
             />
             <HoverButton
