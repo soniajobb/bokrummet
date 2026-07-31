@@ -36,6 +36,11 @@ export function buildSwishQrUrl(amount, message) {
   );
 }
 
+export function getGenre(tag) {
+  const parts = String(tag || "").split("·");
+  return (parts.length > 1 ? parts[1] : parts[0]).trim();
+}
+
 export function isValidSwedishPhone(phone) {
   const digits = String(phone || "").replace(/[^0-9+]/g, "");
   const local = digits.replace(/^\+46/, "0").replace(/^0046/, "0");

@@ -1,4 +1,5 @@
 import { colors, fonts } from "../theme";
+import { getGenre } from "../lib/business";
 import HoverButton from "./HoverButton";
 import AddBookForm from "./AddBookForm";
 import BookRow from "./BookRow";
@@ -11,6 +12,8 @@ export default function ListView({
   allBooks,
   page,
   onGoPage,
+  filterGenre,
+  onSetFilterGenre,
   liked,
   sellerMode,
   showAdd,
@@ -31,10 +34,16 @@ export default function ListView({
   onCancelEdit,
   onRemoveCustom,
 }) {
-  const totalPages = Math.max(1, Math.ceil(allBooks.length / PER_PAGE));
+  const genres = Array.from(new Set(allBooks.map((b) => getGenre(b.tag)))).sort((a, b) =>
+    a.localeCompare(b, "sv")
+  );
+  const filteredBooks =
+    filterGenre === "Alla" ? allBooks : allBooks.filter((b) => getGenre(b.tag) === filterGenre);
+
+  const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PER_PAGE));
   const safePage = Math.min(page, totalPages - 1);
   const start = safePage * PER_PAGE;
-  const pageBooks = allBooks.slice(start, start + PER_PAGE);
+  const pageBooks = filteredBooks.slice(start, start + PER_PAGE);
 
   return (
     <div>
@@ -124,15 +133,44 @@ export default function ListView({
         </div>
       )}
 
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
+        {["Alla", ...genres].map((g) => (
+          <HoverButton
+            key={g}
+            onClick={() => onSetFilterGenre(g)}
+            style={{
+              background: filterGenre === g ? colors.textDark : "transparent",
+              color: filterGenre === g ? colors.paper : colors.textSoft2,
+              border: `1px solid ${filterGenre === g ? colors.textDark : colors.border3}`,
+              padding: "7px 16px",
+              borderRadius: 999,
+              fontSize: 13,
+              letterSpacing: ".3px",
+              cursor: "pointer",
+              fontFamily: fonts.body,
+            }}
+            hoverStyle={{ borderColor: colors.accent, color: filterGenre === g ? colors.paper : colors.accent }}
+          >
+            {g}
+          </HoverButton>
+        ))}
+      </div>
+
+      {filteredBooks.length === 0 && (
+        <p style={{ margin: "24px 0", fontStyle: "italic", color: colors.textSoft2, fontSize: 16 }}>
+          Inga böcker hittades i den här kategorin.
+        </p>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column" }}>
         {pageBooks.map((book, k) => {
-          const i = start + k;
+          const i = book.idx;
           return (
             <BookRow
               key={book.slotB}
               variant="list"
               book={book}
-              rowDir={i % 2 === 1 ? "row-reverse" : "row"}
+              rowDir={k % 2 === 1 ? "row-reverse" : "row"}
               sellerMode={sellerMode}
               liked={liked.includes(i)}
               onOpen={() => onOpenDetail(i)}

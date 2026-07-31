@@ -22,6 +22,7 @@ export default function AuthScreen({ onAuthed }) {
 
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [signupForm, setSignupForm] = useState({ email: "", phone: "", username: "", password: "" });
+  const [forgotForm, setForgotForm] = useState({ username: "" });
 
   const switchMode = (m) => {
     setMode(m);
@@ -101,6 +102,29 @@ export default function AuthScreen({ onAuthed }) {
     }
   };
 
+  const handleForgot = async (e) => {
+    e.preventDefault();
+    setError("");
+    setNotice("");
+    if (!forgotForm.username.trim()) {
+      setError("Fyll i ditt användarnamn.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data: email } = await supabase.rpc("get_email_by_username", {
+        uname: forgotForm.username.trim(),
+      });
+      if (email) {
+        await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+      }
+      setNotice("Om kontot finns skickar vi en återställningslänk till din e-post.");
+      setMode("login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -138,42 +162,44 @@ export default function AuthScreen({ onAuthed }) {
           Logga in eller skapa ett konto för att fortsätta.
         </p>
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-          <HoverButton
-            onClick={() => switchMode("login")}
-            style={{
-              flex: 1,
-              padding: "10px 0",
-              borderRadius: 999,
-              border: "none",
-              cursor: "pointer",
-              fontFamily: fonts.body,
-              fontSize: 14,
-              letterSpacing: ".5px",
-              background: mode === "login" ? colors.textDark : "transparent",
-              color: mode === "login" ? colors.paper : colors.textSoft2,
-            }}
-          >
-            Logga in
-          </HoverButton>
-          <HoverButton
-            onClick={() => switchMode("signup")}
-            style={{
-              flex: 1,
-              padding: "10px 0",
-              borderRadius: 999,
-              border: "none",
-              cursor: "pointer",
-              fontFamily: fonts.body,
-              fontSize: 14,
-              letterSpacing: ".5px",
-              background: mode === "signup" ? colors.textDark : "transparent",
-              color: mode === "signup" ? colors.paper : colors.textSoft2,
-            }}
-          >
-            Skapa konto
-          </HoverButton>
-        </div>
+        {mode !== "forgot" && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+            <HoverButton
+              onClick={() => switchMode("login")}
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                borderRadius: 999,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: fonts.body,
+                fontSize: 14,
+                letterSpacing: ".5px",
+                background: mode === "login" ? colors.textDark : "transparent",
+                color: mode === "login" ? colors.paper : colors.textSoft2,
+              }}
+            >
+              Logga in
+            </HoverButton>
+            <HoverButton
+              onClick={() => switchMode("signup")}
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                borderRadius: 999,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: fonts.body,
+                fontSize: 14,
+                letterSpacing: ".5px",
+                background: mode === "signup" ? colors.textDark : "transparent",
+                color: mode === "signup" ? colors.paper : colors.textSoft2,
+              }}
+            >
+              Skapa konto
+            </HoverButton>
+          </div>
+        )}
 
         {error && (
           <div style={{ marginBottom: 16, color: colors.soldBadge, fontSize: 14 }}>{error}</div>
@@ -217,8 +243,27 @@ export default function AuthScreen({ onAuthed }) {
             >
               {loading ? "Loggar in…" : "Logga in"}
             </HoverButton>
+            <HoverButton
+              type="button"
+              onClick={() => switchMode("forgot")}
+              style={{
+                marginTop: 2,
+                alignSelf: "center",
+                background: "transparent",
+                border: "none",
+                color: colors.textMuted3,
+                fontSize: 13,
+                cursor: "pointer",
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
+                fontFamily: fonts.body,
+              }}
+              hoverStyle={{ color: colors.accent }}
+            >
+              Glömt lösenord?
+            </HoverButton>
           </form>
-        ) : (
+        ) : mode === "signup" ? (
           <form onSubmit={handleSignup} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input
               type="email"
@@ -266,6 +311,56 @@ export default function AuthScreen({ onAuthed }) {
               hoverStyle={{ background: colors.accentHover }}
             >
               {loading ? "Skapar konto…" : "Skapa konto"}
+            </HoverButton>
+          </form>
+        ) : (
+          <form onSubmit={handleForgot} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 14, lineHeight: 1.6, color: colors.textSoft }}>
+              Skriv ditt användarnamn så skickar vi en återställningslänk till e-postadressen kopplad till kontot.
+            </p>
+            <input
+              value={forgotForm.username}
+              onChange={(e) => setForgotForm((f) => ({ ...f, username: e.target.value }))}
+              placeholder="Användarnamn"
+              style={fieldStyle}
+            />
+            <HoverButton
+              type="submit"
+              disabled={loading}
+              style={{
+                marginTop: 8,
+                background: colors.accent,
+                color: colors.paper,
+                border: "none",
+                padding: "13px 26px",
+                borderRadius: 999,
+                fontSize: 15,
+                letterSpacing: ".5px",
+                cursor: loading ? "default" : "pointer",
+                fontFamily: fonts.body,
+                opacity: loading ? 0.7 : 1,
+              }}
+              hoverStyle={{ background: colors.accentHover }}
+            >
+              {loading ? "Skickar…" : "Skicka återställningslänk"}
+            </HoverButton>
+            <HoverButton
+              type="button"
+              onClick={() => switchMode("login")}
+              style={{
+                alignSelf: "center",
+                background: "transparent",
+                border: "none",
+                color: colors.textMuted3,
+                fontSize: 13,
+                cursor: "pointer",
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
+                fontFamily: fonts.body,
+              }}
+              hoverStyle={{ color: colors.accent }}
+            >
+              ← Tillbaka till inloggning
             </HoverButton>
           </form>
         )}

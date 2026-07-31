@@ -4,6 +4,7 @@ import { priceToNumber, computeShipping, isValidSwedishPhone, SELLER_EMAIL, SWIS
 import { sendEmail } from "./lib/email";
 import { supabase } from "./lib/supabaseClient";
 import AuthScreen from "./components/AuthScreen";
+import ResetPasswordScreen from "./components/ResetPasswordScreen";
 import TopBar from "./components/TopBar";
 import ListView from "./components/ListView";
 import DetailView from "./components/DetailView";
@@ -37,10 +38,12 @@ function normalizePrice(raw) {
 export default function App() {
   const [session, setSession] = useState(undefined);
   const [profile, setProfile] = useState(null);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, sess) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, sess) => {
+      if (event === "PASSWORD_RECOVERY") setPasswordRecovery(true);
       setSession(sess);
     });
     return () => listener.subscription.unsubscribe();
@@ -62,6 +65,7 @@ export default function App() {
   }, [session?.user?.id]);
 
   const [view, setView] = useState("list");
+  const [filterGenre, setFilterGenre] = useState("Alla");
   const [selected, setSelected] = useState(0);
   const [page, setPage] = useState(0);
   const [sellerMode, setSellerMode] = useState(false);
@@ -164,6 +168,10 @@ export default function App() {
   const goPage = (n) => {
     setPage(n);
     scrollTop();
+  };
+  const setGenreFilter = (g) => {
+    setFilterGenre(g);
+    setPage(0);
   };
 
   const addToCart = (i) => {
@@ -367,6 +375,10 @@ export default function App() {
     );
   }
 
+  if (passwordRecovery) {
+    return <ResetPasswordScreen onDone={() => setPasswordRecovery(false)} />;
+  }
+
   if (!session) {
     return <AuthScreen onAuthed={() => {}} />;
   }
@@ -391,6 +403,8 @@ export default function App() {
             allBooks={allBooks}
             page={page}
             onGoPage={goPage}
+            filterGenre={filterGenre}
+            onSetFilterGenre={setGenreFilter}
             liked={liked}
             sellerMode={sellerMode && !!profile?.is_seller}
             showAdd={showAdd}
