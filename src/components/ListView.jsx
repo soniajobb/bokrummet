@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { colors, fonts } from "../theme";
-import { getGenre } from "../lib/business";
+import { getGenre, priceToNumber } from "../lib/business";
 import HoverButton from "./HoverButton";
 import AddBookForm from "./AddBookForm";
 import BookRow from "./BookRow";
@@ -7,6 +8,30 @@ import Pagination from "./Pagination";
 import Footer from "./Footer";
 
 const PER_PAGE = 7;
+
+const SORT_OPTIONS = [
+  { key: "standard", label: "Standard" },
+  { key: "price-asc", label: "Pris: lägst till högst" },
+  { key: "price-desc", label: "Pris: högst till lägst" },
+];
+
+function chipStyle(active) {
+  return {
+    background: active ? colors.textDark : "transparent",
+    color: active ? colors.paper : colors.textSoft2,
+    border: `1px solid ${active ? colors.textDark : colors.border3}`,
+    padding: "7px 16px",
+    borderRadius: 999,
+    fontSize: 13,
+    letterSpacing: ".3px",
+    cursor: "pointer",
+    fontFamily: fonts.body,
+  };
+}
+
+function chipHoverStyle(active) {
+  return { borderColor: colors.accent, color: active ? colors.paper : colors.accent };
+}
 
 export default function ListView({
   allBooks,
@@ -34,16 +59,32 @@ export default function ListView({
   onCancelEdit,
   onRemoveCustom,
 }) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState("standard");
+
   const genres = Array.from(new Set(allBooks.map((b) => getGenre(b.tag)))).sort((a, b) =>
     a.localeCompare(b, "sv")
   );
   const filteredBooks =
     filterGenre === "Alla" ? allBooks : allBooks.filter((b) => getGenre(b.tag) === filterGenre);
 
-  const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PER_PAGE));
+  const sortedBooks =
+    sortOrder === "price-asc"
+      ? [...filteredBooks].sort((a, b) => priceToNumber(a.price) - priceToNumber(b.price))
+      : sortOrder === "price-desc"
+        ? [...filteredBooks].sort((a, b) => priceToNumber(b.price) - priceToNumber(a.price))
+        : filteredBooks;
+
+  const totalPages = Math.max(1, Math.ceil(sortedBooks.length / PER_PAGE));
   const safePage = Math.min(page, totalPages - 1);
   const start = safePage * PER_PAGE;
-  const pageBooks = filteredBooks.slice(start, start + PER_PAGE);
+  const pageBooks = sortedBooks.slice(start, start + PER_PAGE);
+
+  const hasActiveFilter = filterGenre !== "Alla" || sortOrder !== "standard";
+  const handleSetSort = (key) => {
+    setSortOrder(key);
+    onGoPage(0);
+  };
 
   return (
     <div>
@@ -133,27 +174,88 @@ export default function ListView({
         </div>
       )}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
-        {["Alla", ...genres].map((g) => (
-          <HoverButton
-            key={g}
-            onClick={() => onSetFilterGenre(g)}
+      <div style={{ marginBottom: 28 }}>
+        <HoverButton
+          onClick={() => setFiltersOpen((v) => !v)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 9,
+            background: filtersOpen ? colors.textDark : "transparent",
+            color: filtersOpen ? colors.paper : colors.textSoft2,
+            border: `1px solid ${filtersOpen ? colors.textDark : colors.border3}`,
+            padding: "9px 18px",
+            borderRadius: 999,
+            fontSize: 14,
+            letterSpacing: ".4px",
+            cursor: "pointer",
+            fontFamily: fonts.body,
+          }}
+          hoverStyle={{ borderColor: colors.accent, color: filtersOpen ? colors.paper : colors.accent }}
+        >
+          Filtrera
+          {hasActiveFilter && (
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: filtersOpen ? colors.paper : colors.accent,
+                display: "inline-block",
+              }}
+            />
+          )}
+          <span
             style={{
-              background: filterGenre === g ? colors.textDark : "transparent",
-              color: filterGenre === g ? colors.paper : colors.textSoft2,
-              border: `1px solid ${filterGenre === g ? colors.textDark : colors.border3}`,
-              padding: "7px 16px",
-              borderRadius: 999,
-              fontSize: 13,
-              letterSpacing: ".3px",
-              cursor: "pointer",
-              fontFamily: fonts.body,
+              fontSize: 11,
+              display: "inline-block",
+              transform: filtersOpen ? "rotate(180deg)" : "none",
+              transition: "transform .15s",
             }}
-            hoverStyle={{ borderColor: colors.accent, color: filterGenre === g ? colors.paper : colors.accent }}
           >
-            {g}
-          </HoverButton>
-        ))}
+            ▾
+          </span>
+        </HoverButton>
+
+        {filtersOpen && (
+          <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <p style={{ margin: "0 0 8px", fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", color: colors.textMuted }}>
+                Kategori
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {["Alla", ...genres].map((g) => (
+                  <HoverButton
+                    key={g}
+                    onClick={() => onSetFilterGenre(g)}
+                    style={chipStyle(filterGenre === g)}
+                    hoverStyle={chipHoverStyle(filterGenre === g)}
+                  >
+                    {g}
+                  </HoverButton>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p style={{ margin: "0 0 8px", fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", color: colors.textMuted }}>
+                Sortera
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {SORT_OPTIONS.map((opt) => (
+                  <HoverButton
+                    key={opt.key}
+                    onClick={() => handleSetSort(opt.key)}
+                    style={chipStyle(sortOrder === opt.key)}
+                    hoverStyle={chipHoverStyle(sortOrder === opt.key)}
+                  >
+                    {opt.label}
+                  </HoverButton>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {filteredBooks.length === 0 && (
