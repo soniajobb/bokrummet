@@ -81,6 +81,8 @@ export default function AuthScreen({ onAuthed }) {
       if (signUpError) {
         if (/registered/i.test(signUpError.message)) {
           setError("Den e-postadressen är redan registrerad.");
+        } else if (/rate limit/i.test(signUpError.message)) {
+          setError("För många mejl har skickats på kort tid. Vänta en liten stund och försök igen.");
         } else {
           setError(signUpError.message);
         }
@@ -113,9 +115,13 @@ export default function AuthScreen({ onAuthed }) {
     }
     setLoading(true);
     try {
-      await supabase.auth.resetPasswordForEmail(forgotForm.email.trim(), {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotForm.email.trim(), {
         redirectTo: window.location.origin,
       });
+      if (resetError && /rate limit/i.test(resetError.message)) {
+        setError("För många mejl har skickats på kort tid. Vänta en liten stund och försök igen.");
+        return;
+      }
       setNotice("Om kontot finns skickar vi en återställningslänk till din e-post.");
       setMode("login");
     } finally {
