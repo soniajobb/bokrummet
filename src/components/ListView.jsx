@@ -61,12 +61,21 @@ export default function ListView({
 }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState("standard");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const genres = Array.from(new Set(allBooks.map((b) => getGenre(b.tag)))).sort((a, b) =>
     a.localeCompare(b, "sv")
   );
+
+  const query = searchQuery.trim().toLowerCase();
+  const searchedBooks = !query
+    ? allBooks
+    : allBooks.filter(
+        (b) => b.title.toLowerCase().includes(query) || b.author.toLowerCase().includes(query)
+      );
+
   const filteredBooks =
-    filterGenre === "Alla" ? allBooks : allBooks.filter((b) => getGenre(b.tag) === filterGenre);
+    filterGenre === "Alla" ? searchedBooks : searchedBooks.filter((b) => getGenre(b.tag) === filterGenre);
 
   const sortedBooks =
     sortOrder === "price-asc"
@@ -83,6 +92,10 @@ export default function ListView({
   const hasActiveFilter = filterGenre !== "Alla" || sortOrder !== "standard";
   const handleSetSort = (key) => {
     setSortOrder(key);
+    onGoPage(0);
+  };
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
     onGoPage(0);
   };
 
@@ -174,6 +187,46 @@ export default function ListView({
         </div>
       )}
 
+      <div style={{ position: "relative", marginBottom: 20 }}>
+        <input
+          value={searchQuery}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Sök efter titel eller författare…"
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            background: colors.card,
+            border: `1px solid ${colors.border2}`,
+            borderRadius: 999,
+            padding: "13px 20px",
+            fontSize: 15,
+            color: colors.textDark,
+            fontFamily: fonts.body,
+          }}
+        />
+        {searchQuery && (
+          <HoverButton
+            onClick={() => handleSearchChange("")}
+            style={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "transparent",
+              border: "none",
+              color: colors.textMuted2,
+              fontSize: 20,
+              lineHeight: 1,
+              cursor: "pointer",
+              padding: "6px 10px",
+            }}
+            hoverStyle={{ color: colors.accent }}
+          >
+            ×
+          </HoverButton>
+        )}
+      </div>
+
       <div style={{ marginBottom: 28 }}>
         <HoverButton
           onClick={() => setFiltersOpen((v) => !v)}
@@ -260,7 +313,7 @@ export default function ListView({
 
       {filteredBooks.length === 0 && (
         <p style={{ margin: "24px 0", fontStyle: "italic", color: colors.textSoft2, fontSize: 16 }}>
-          Inga böcker hittades i den här kategorin.
+          {query ? "Inga böcker matchade sökningen." : "Inga böcker hittades i den här kategorin."}
         </p>
       )}
 
