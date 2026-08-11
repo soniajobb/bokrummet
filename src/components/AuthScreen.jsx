@@ -88,6 +88,12 @@ export default function AuthScreen({ onAuthed }) {
       }
       if (data.session) {
         onAuthed?.();
+      } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+        // Supabase svarar utan fel även när e-posten redan har ett bekräftat konto
+        // (för att inte avslöja registrerade adresser) - en tom identities-lista
+        // är tecknet på att inget nytt konto/mejl faktiskt skickades.
+        setError("Den här e-postadressen har redan ett konto. Logga in istället, eller använd \"Glömt lösenord?\" om du inte kommer ihåg lösenordet.");
+        setMode("login");
       } else {
         setNotice("Konto skapat! Kolla din e-post och bekräfta innan du loggar in.");
         setMode("login");
