@@ -1,4 +1,6 @@
 -- Kör hela detta i Supabase Dashboard -> SQL Editor -> New query -> Run
+-- OBS: pa ett FRISKT projekt maste supabase_setup_auth.sql koras FORE denna
+-- fil, eftersom bocker-reglerna nedan slar upp is_seller i public.profiles.
 
 create table if not exists public.books (
   id uuid primary key default gen_random_uuid(),
@@ -20,14 +22,40 @@ alter table public.books enable row level security;
 create policy "Alla kan läsa böcker" on public.books
   for select using (true);
 
-create policy "Alla kan lägga till böcker" on public.books
-  for insert with check (true);
+create policy "Saljare kan lagga till bocker" on public.books
+  for insert
+  with check (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_seller = true)
+  );
 
-create policy "Alla kan uppdatera böcker" on public.books
-  for update using (true);
+create policy "Saljare kan uppdatera bocker" on public.books
+  for update
+  using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_seller = true)
+  );
 
-create policy "Alla kan ta bort böcker" on public.books
-  for delete using (true);
+create policy "Saljare kan ta bort bocker" on public.books
+  for delete
+  using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_seller = true)
+  );
+
+-- Inloggade kunder far markera EN bok som sald (t.ex. vid kop) utan att
+-- vara saljare, via denna snava funktion som bara satter sold = true.
+create or replace function public.mark_book_sold(p_slot_b text)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Inte inloggad';
+  end if;
+  update public.books set sold = true where slot_b = p_slot_b;
+end;
+$$;
+
+grant execute on function public.mark_book_sold(text) to authenticated;
 
 alter publication supabase_realtime add table public.books;
 

@@ -337,7 +337,7 @@ export default function App() {
     try {
       await sendEmail({ subject, name: order.name, message: body });
       await Promise.all(
-        cartSnapshot.map((i) => supabase.from("books").update({ sold: true }).eq("slot_b", books[i].slotB))
+        cartSnapshot.map((i) => supabase.rpc("mark_book_sold", { p_slot_b: books[i].slotB }))
       );
       fetchBooks();
 

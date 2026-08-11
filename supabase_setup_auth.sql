@@ -20,7 +20,12 @@ create policy "Läs sin egen profil" on public.profiles
   for select using (auth.uid() = id);
 
 create policy "Uppdatera sin egen profil" on public.profiles
-  for update using (auth.uid() = id);
+  for update
+  using (auth.uid() = id)
+  with check (
+    auth.uid() = id
+    and is_seller = (select p.is_seller from public.profiles p where p.id = profiles.id)
+  );
 
 -- Skapar automatiskt en profilrad när någon registrerar sig
 create or replace function public.handle_new_user()
