@@ -45,7 +45,11 @@ export default function AuthScreen({ onAuthed }) {
         password: loginForm.password,
       });
       if (signInError) {
-        setError("Fel e-post eller lösenord.");
+        if (/confirm/i.test(signInError.message)) {
+          setError("Du måste bekräfta din e-postadress innan du kan logga in. Kolla din inkorg (och skräppost) efter mejlet med bekräftelselänken.");
+        } else {
+          setError("Fel e-post eller lösenord.");
+        }
         return;
       }
       onAuthed?.();
