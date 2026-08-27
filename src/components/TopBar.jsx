@@ -1,7 +1,7 @@
 import { colors } from "../theme";
 import HoverButton from "./HoverButton";
 
-export default function TopBar({ isSeller, sellerMode, onToggleSeller, likedCount, onOpenSaved, cartCount, onOpenCart, displayName, onLogout }) {
+export default function TopBar({ isSeller, sellerMode, onToggleSeller, likedCount, onOpenSaved, cartCount, onOpenCart, displayName, onLogout, isLoggedIn, onLoginClick }) {
   return (
     <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 8 }}>
       {displayName && (
@@ -30,7 +30,7 @@ export default function TopBar({ isSeller, sellerMode, onToggleSeller, likedCoun
       )}
 
       <HoverButton
-        onClick={onLogout}
+        onClick={isLoggedIn ? onLogout : onLoginClick}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -45,7 +45,7 @@ export default function TopBar({ isSeller, sellerMode, onToggleSeller, likedCoun
         }}
         hoverStyle={{ color: colors.accent }}
       >
-        Logga ut
+        {isLoggedIn ? "Logga ut" : "Logga in"}
       </HoverButton>
 
       <HoverButton

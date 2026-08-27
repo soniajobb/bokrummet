@@ -17,7 +17,7 @@ const fieldStyle = {
   boxSizing: "border-box",
 };
 
-export default function AuthScreen({ onAuthed }) {
+export default function AuthScreen({ onAuthed, onClose }) {
   const [mode, setMode] = useState("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -144,6 +144,7 @@ export default function AuthScreen({ onAuthed }) {
     >
       <div
         style={{
+          position: "relative",
           width: "min(420px, 100%)",
           background: colors.card,
           border: `1px solid ${colors.border2}`,
@@ -151,6 +152,26 @@ export default function AuthScreen({ onAuthed }) {
           padding: "clamp(28px, 6vw, 40px)",
         }}
       >
+        {onClose && (
+          <HoverButton
+            onClick={onClose}
+            title="Fortsätt titta utan att logga in"
+            style={{
+              position: "absolute",
+              top: 14,
+              right: 14,
+              background: "transparent",
+              border: "none",
+              fontSize: 22,
+              lineHeight: 1,
+              color: colors.textSoft2,
+              cursor: "pointer",
+            }}
+            hoverStyle={{ color: colors.accent }}
+          >
+            ×
+          </HoverButton>
+        )}
         <h1
           style={{
             margin: "0 0 6px",

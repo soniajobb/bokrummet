@@ -39,6 +39,7 @@ export default function App() {
   const [session, setSession] = useState(undefined);
   const [profile, setProfile] = useState(null);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
@@ -301,6 +302,11 @@ export default function App() {
 
   const submitOrder = async (e) => {
     e.preventDefault();
+    if (!session) {
+      setOrderError("Logga in eller skapa ett konto för att slutföra beställningen.");
+      setAuthOpen(true);
+      return;
+    }
     if (!isValidSwedishPhone(order.phone)) {
       setOrderError("Ange ett giltigt telefonnummer, t.ex. 070-123 45 67.");
       return;
@@ -394,8 +400,8 @@ export default function App() {
     return <ResetPasswordScreen onDone={() => setPasswordRecovery(false)} />;
   }
 
-  if (!session) {
-    return <AuthScreen onAuthed={() => {}} />;
+  if (authOpen && !session) {
+    return <AuthScreen onAuthed={() => setAuthOpen(false)} onClose={() => setAuthOpen(false)} />;
   }
 
   return (
@@ -411,6 +417,8 @@ export default function App() {
           onOpenCart={toggleCart}
           displayName={profile?.full_name || profile?.email}
           onLogout={handleLogout}
+          isLoggedIn={!!session}
+          onLoginClick={() => setAuthOpen(true)}
         />
 
         {view === "list" && (
