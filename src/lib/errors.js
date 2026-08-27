@@ -26,6 +26,9 @@ export function getSignUpErrorMessage(signUpError) {
   if (/sending confirmation email/i.test(raw)) {
     return "Kunde inte skicka bekräftelsemejl till den där adressen. Kontrollera att e-postadressen är rätt stavad och giltig.";
   }
+  if (/invalid format|unable to validate email/i.test(raw)) {
+    return "Ange en giltig e-postadress, t.ex. namn@exempel.se.";
+  }
   return safeErrorMessage(signUpError);
 }
 

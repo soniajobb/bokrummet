@@ -47,6 +47,13 @@ export function isValidSwedishPhone(phone) {
   return /^0\d{8,9}$/.test(local);
 }
 
+export function isValidEmail(email) {
+  // Practical check, not a full RFC 5322 parser: requires a local part, an
+  // "@", a domain with at least one dot, and a 2+ letter TLD - enough to
+  // catch obvious typos (missing domain, no TLD) before we ever call Supabase.
+  return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(String(email || "").trim());
+}
+
 export function buildMailto(to, subject, body) {
   return (
     "mailto:" +

@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import HoverButton from "./HoverButton";
 import Alert from "./Alert";
 import { getSignUpErrorMessage, getLoginErrorMessage, getRateLimitMessage, safeErrorMessage } from "../lib/errors";
+import { isValidEmail } from "../lib/business";
 
 const fieldStyle = {
   background: colors.paper,
@@ -65,6 +66,10 @@ export default function AuthScreen({ onAuthed }) {
       setError("Fyll i alla fält.");
       return;
     }
+    if (!isValidEmail(email)) {
+      setError("Ange en giltig e-postadress, t.ex. namn@exempel.se.");
+      return;
+    }
     if (password.length < 6) {
       setError("Lösenordet måste vara minst 6 tecken.");
       return;
@@ -103,6 +108,10 @@ export default function AuthScreen({ onAuthed }) {
     setNotice("");
     if (!forgotForm.email.trim()) {
       setError("Fyll i din e-postadress.");
+      return;
+    }
+    if (!isValidEmail(forgotForm.email)) {
+      setError("Ange en giltig e-postadress, t.ex. namn@exempel.se.");
       return;
     }
     setLoading(true);
