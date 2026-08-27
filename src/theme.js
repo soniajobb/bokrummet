@@ -25,6 +25,9 @@ export const colors = {
   successBg: "#e9efe4",
   successBorder: "#84a173",
   successText: "#3d4f35",
+  infoBg: "#f6ecd3",
+  infoBorder: "#c9a24f",
+  infoText: "#5c4720",
 };
 
 export const fonts = {

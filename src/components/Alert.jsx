@@ -13,6 +13,12 @@ const VARIANTS = {
     text: colors.successText,
     icon: "✓",
   },
+  info: {
+    bg: colors.infoBg,
+    border: colors.infoBorder,
+    text: colors.infoText,
+    icon: "i",
+  },
 };
 
 // Shared banner for showing errors and success messages clearly (background,

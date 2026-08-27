@@ -21,7 +21,7 @@ export default function AuthScreen({ onAuthed, onClose, initialNotice = "" }) {
   const [mode, setMode] = useState("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState(initialNotice);
+  const [notice, setNotice] = useState("");
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({ fullName: "", email: "", phone: "", password: "" });
@@ -195,6 +195,8 @@ export default function AuthScreen({ onAuthed, onClose, initialNotice = "" }) {
         <p style={{ margin: "0 0 28px", textAlign: "center", fontStyle: "italic", color: colors.textSoft }}>
           Logga in eller skapa ett konto för att fortsätta.
         </p>
+
+        {initialNotice && <Alert type="info">{initialNotice}</Alert>}
 
         {mode !== "forgot" && (
           <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
