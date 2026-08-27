@@ -40,6 +40,7 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [authMessage, setAuthMessage] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
@@ -92,13 +93,40 @@ export default function App() {
 
   useEffect(() => {
     if (profile) {
-      setCartState(profile.cart || []);
-      setLikedState(profile.liked || []);
-      setOrderState({
-        name: profile.full_name || "",
-        phone: profile.phone || "",
-        address: profile.address || "",
+      // Merge rather than overwrite: a guest can have items in the cart or
+      // liked list before logging in/signing up, and those must not be
+      // silently discarded in favor of the (often empty) saved profile data.
+      setCartState((current) => {
+        const merged = Array.from(new Set([...(profile.cart || []), ...current]));
+        if (merged.length !== (profile.cart || []).length) {
+          supabase
+            .from("profiles")
+            .update({ cart: merged })
+            .eq("id", profile.id)
+            .then(({ error }) => {
+              if (error) console.error("Kunde inte spara varukorgen:", error);
+            });
+        }
+        return merged;
       });
+      setLikedState((current) => {
+        const merged = Array.from(new Set([...(profile.liked || []), ...current]));
+        if (merged.length !== (profile.liked || []).length) {
+          supabase
+            .from("profiles")
+            .update({ liked: merged })
+            .eq("id", profile.id)
+            .then(({ error }) => {
+              if (error) console.error("Kunde inte spara sparade böcker:", error);
+            });
+        }
+        return merged;
+      });
+      setOrderState((o) => ({
+        name: o.name || profile.full_name || "",
+        phone: o.phone || profile.phone || "",
+        address: o.address || profile.address || "",
+      }));
     } else {
       setCartState([]);
       setLikedState([]);
@@ -303,7 +331,7 @@ export default function App() {
   const submitOrder = async (e) => {
     e.preventDefault();
     if (!session) {
-      setOrderError("Logga in eller skapa ett konto för att slutföra beställningen.");
+      setAuthMessage("Logga in eller skapa ett konto för att slutföra din beställning.");
       setAuthOpen(true);
       return;
     }
@@ -400,10 +428,6 @@ export default function App() {
     return <ResetPasswordScreen onDone={() => setPasswordRecovery(false)} />;
   }
 
-  if (authOpen && !session) {
-    return <AuthScreen onAuthed={() => setAuthOpen(false)} onClose={() => setAuthOpen(false)} />;
-  }
-
   return (
     <div style={{ minHeight: "100vh", background: colors.paper, fontFamily: fonts.body, color: colors.textDark }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "clamp(20px, 5vw, 36px) clamp(16px, 5vw, 40px) 72px" }}>
@@ -418,7 +442,10 @@ export default function App() {
           displayName={profile?.full_name || profile?.email}
           onLogout={handleLogout}
           isLoggedIn={!!session}
-          onLoginClick={() => setAuthOpen(true)}
+          onLoginClick={() => {
+            setAuthMessage("");
+            setAuthOpen(true);
+          }}
         />
 
         {view === "list" && (
@@ -494,6 +521,14 @@ export default function App() {
         orderError={orderError}
         onSubmitOrder={submitOrder}
       />
+
+      {authOpen && !session && (
+        <AuthScreen
+          onAuthed={() => setAuthOpen(false)}
+          onClose={() => setAuthOpen(false)}
+          initialNotice={authMessage}
+        />
+      )}
     </div>
   );
 }

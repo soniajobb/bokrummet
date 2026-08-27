@@ -17,11 +17,11 @@ const fieldStyle = {
   boxSizing: "border-box",
 };
 
-export default function AuthScreen({ onAuthed, onClose }) {
+export default function AuthScreen({ onAuthed, onClose, initialNotice = "" }) {
   const [mode, setMode] = useState("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState(initialNotice);
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({ fullName: "", email: "", phone: "", password: "" });
@@ -133,23 +133,31 @@ export default function AuthScreen({ onAuthed, onClose }) {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        position: "fixed",
+        inset: 0,
+        zIndex: 60,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: colors.paper,
         fontFamily: fonts.body,
         padding: 20,
       }}
     >
       <div
+        onClick={onClose}
+        style={{ position: "absolute", inset: 0, background: "rgba(51,41,31,.5)" }}
+      />
+      <div
         style={{
           position: "relative",
           width: "min(420px, 100%)",
+          maxHeight: "calc(100vh - 40px)",
+          overflowY: "auto",
           background: colors.card,
           border: `1px solid ${colors.border2}`,
           borderRadius: 14,
           padding: "clamp(28px, 6vw, 40px)",
+          boxShadow: "0 24px 60px -20px rgba(51,41,31,.5)",
         }}
       >
         {onClose && (
