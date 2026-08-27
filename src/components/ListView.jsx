@@ -15,6 +15,11 @@ const SORT_OPTIONS = [
   { key: "price-desc", label: "Pris: högst till lägst" },
 ];
 
+const AVAILABILITY_OPTIONS = [
+  { key: "alla", label: "Alla" },
+  { key: "till-salu", label: "Till salu" },
+];
+
 function chipStyle(active) {
   return {
     background: active ? colors.textDark : "transparent",
@@ -61,6 +66,7 @@ export default function ListView({
 }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState("standard");
+  const [availability, setAvailability] = useState("alla");
   const [searchQuery, setSearchQuery] = useState("");
 
   const genres = Array.from(new Set(allBooks.map((b) => getGenre(b.tag)))).sort((a, b) =>
@@ -74,8 +80,11 @@ export default function ListView({
         (b) => b.title.toLowerCase().includes(query) || b.author.toLowerCase().includes(query)
       );
 
-  const filteredBooks =
+  const genreFilteredBooks =
     filterGenre === "Alla" ? searchedBooks : searchedBooks.filter((b) => getGenre(b.tag) === filterGenre);
+
+  const filteredBooks =
+    availability === "till-salu" ? genreFilteredBooks.filter((b) => !b.sold) : genreFilteredBooks;
 
   const sortedBooks =
     sortOrder === "price-asc"
@@ -89,9 +98,13 @@ export default function ListView({
   const start = safePage * PER_PAGE;
   const pageBooks = sortedBooks.slice(start, start + PER_PAGE);
 
-  const hasActiveFilter = filterGenre !== "Alla" || sortOrder !== "standard";
+  const hasActiveFilter = filterGenre !== "Alla" || sortOrder !== "standard" || availability !== "alla";
   const handleSetSort = (key) => {
     setSortOrder(key);
+    onGoPage(0);
+  };
+  const handleSetAvailability = (key) => {
+    setAvailability(key);
     onGoPage(0);
   };
   const handleSearchChange = (value) => {
@@ -272,6 +285,24 @@ export default function ListView({
 
         {filtersOpen && (
           <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <p style={{ margin: "0 0 8px", fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", color: colors.textMuted }}>
+                Tillgänglighet
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {AVAILABILITY_OPTIONS.map((opt) => (
+                  <HoverButton
+                    key={opt.key}
+                    onClick={() => handleSetAvailability(opt.key)}
+                    style={chipStyle(availability === opt.key)}
+                    hoverStyle={chipHoverStyle(availability === opt.key)}
+                  >
+                    {opt.label}
+                  </HoverButton>
+                ))}
+              </div>
+            </div>
+
             <div>
               <p style={{ margin: "0 0 8px", fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", color: colors.textMuted }}>
                 Kategori
