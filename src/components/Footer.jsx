@@ -16,7 +16,7 @@ export default function Footer() {
         color: colors.textMuted,
       }}
     >
-      <span>© 2026 Bokrummet</span>
+      <span>© 2026 Bokrummet · Skapad av Sonia Esmaeili</span>
       <span style={{ letterSpacing: ".5px" }}>Begagnade barnböcker i gott skick</span>
     </footer>
   );
