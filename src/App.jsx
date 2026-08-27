@@ -366,7 +366,6 @@ export default function App() {
       " kr till " +
       SWISH_NUMBER_DISPLAY +
       ".";
-    const orderedSlotBs = cartSnapshot.map((i) => books[i].slotB);
     setOrderError("");
     setSendingOrder(true);
     try {
@@ -382,11 +381,13 @@ export default function App() {
           });
       }
 
-      // Books are marked sold only once the buyer actually opens Swish to pay
-      // (see markOrderedBooksSold), not here - Swish gives no way to confirm a
-      // payment actually went through, so marking sold at order time risked
-      // locking a book for good if the buyer backed out before paying.
-      setOrderSummary({ total, shipLabel, swishMessage, slotBs: orderedSlotBs });
+      // Books are intentionally NOT auto-marked sold anywhere in this flow.
+      // Personal Swish gives no way to confirm a payment actually went
+      // through, so any automatic trigger (order submitted, Swish opened)
+      // risks marking a book sold before - or even without - real payment.
+      // Sonia marks a book sold herself, from seller mode, once she has
+      // actually seen the Swish payment arrive.
+      setOrderSummary({ total, shipLabel, swishMessage });
       setCheckoutStep("done");
       setCart([]);
     } catch {
@@ -394,20 +395,6 @@ export default function App() {
     } finally {
       setSendingOrder(false);
     }
-  };
-
-  // Fires when the buyer taps "Öppna Swish-appen" on the order confirmation
-  // screen - the closest thing to a real payment signal we have, since
-  // personal Swish gives no callback when a payment actually completes.
-  const markOrderedBooksSold = () => {
-    if (!orderSummary?.slotBs?.length) return;
-    Promise.all(
-      orderSummary.slotBs.map((slotB) =>
-        supabase.rpc("mark_book_sold", { p_slot_b: slotB }).then(({ error }) => {
-          if (error) console.error("Kunde inte markera boken som såld:", error);
-        })
-      )
-    ).then(fetchBooks);
   };
 
   const cartBooks = cart.map((i, pos) => ({ ...books[i], pos }));
@@ -535,7 +522,6 @@ export default function App() {
         sendingOrder={sendingOrder}
         orderError={orderError}
         onSubmitOrder={submitOrder}
-        onOpenSwish={markOrderedBooksSold}
       />
 
       {authOpen && !session && (

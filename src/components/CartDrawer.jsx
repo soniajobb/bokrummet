@@ -28,7 +28,6 @@ export default function CartDrawer({
   sendingOrder,
   orderError,
   onSubmitOrder,
-  onOpenSwish,
 }) {
   if (!open) return null;
 
@@ -116,7 +115,6 @@ export default function CartDrawer({
               </div>
               <a
                 href={buildSwishLink(orderSummary?.total ?? 0, orderSummary?.swishMessage ?? "Bokrummet")}
-                onClick={onOpenSwish}
                 style={{
                   display: "block",
                   width: "100%",
