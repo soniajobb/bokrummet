@@ -41,6 +41,7 @@ export default function App() {
   const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
+  const [pendingCheckout, setPendingCheckout] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
@@ -328,13 +329,7 @@ export default function App() {
     setOrderError("");
   };
 
-  const submitOrder = async (e) => {
-    e.preventDefault();
-    if (!session) {
-      setAuthMessage("Logga in eller skapa ett konto för att slutföra din beställning.");
-      setAuthOpen(true);
-      return;
-    }
+  const performOrderSubmit = async () => {
     if (!isValidSwedishPhone(order.phone)) {
       setOrderError("Ange ett giltigt telefonnummer, t.ex. 070-123 45 67.");
       return;
@@ -397,6 +392,28 @@ export default function App() {
     }
   };
 
+  const submitOrder = (e) => {
+    e.preventDefault();
+    if (!session) {
+      setPendingCheckout(true);
+      setAuthMessage("Logga in eller skapa ett konto för att slutföra din beställning.");
+      setAuthOpen(true);
+      return;
+    }
+    performOrderSubmit();
+  };
+
+  // If logging in/signing up was triggered by "Skicka beställning" (see
+  // submitOrder above), automatically finish that same order once a session
+  // actually exists - no need to make the buyer click the button again.
+  useEffect(() => {
+    if (session && pendingCheckout) {
+      setPendingCheckout(false);
+      setAuthOpen(false);
+      performOrderSubmit();
+    }
+  }, [session, pendingCheckout]);
+
   const cartBooks = cart.map((i, pos) => ({ ...books[i], pos }));
   const booksTotal = cartBooks.reduce((sum, b) => sum + priceToNumber(b.price), 0);
   const { freeShip, total } = computeShipping(booksTotal, shipping);
@@ -445,6 +462,7 @@ export default function App() {
           onLogout={handleLogout}
           isLoggedIn={!!session}
           onLoginClick={() => {
+            setPendingCheckout(false);
             setAuthMessage("");
             setAuthOpen(true);
           }}
