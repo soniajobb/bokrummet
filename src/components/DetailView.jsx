@@ -1,6 +1,7 @@
 import { colors, fonts } from "../theme";
 import HoverButton from "./HoverButton";
 import CoverImage from "./CoverImage";
+import Alert from "./Alert";
 
 const fieldStyle = {
   background: colors.card,
@@ -243,9 +244,7 @@ export default function DetailView({
             >
               {sending ? "Skickar…" : "Skicka meddelande"}
             </HoverButton>
-            {error && (
-              <p style={{ margin: "2px 0 0", fontSize: 14, color: colors.soldBadge }}>{error}</p>
-            )}
+            <Alert type="error" style={{ marginTop: 10, marginBottom: 0 }}>{error}</Alert>
           </form>
         ) : (
           <div style={{ background: colors.card, border: `1px solid ${colors.border2}`, borderRadius: 8, padding: "28px 30px" }}>

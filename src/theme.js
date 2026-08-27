@@ -19,6 +19,12 @@ export const colors = {
   saveBg: "#f7e4dc",
   saveBorder: "#e2b7a4",
   cartRowBorder: "#e6d9c4",
+  errorBg: "#f8e6de",
+  errorBorder: "#c9714a",
+  errorText: "#6b2c17",
+  successBg: "#e9efe4",
+  successBorder: "#84a173",
+  successText: "#3d4f35",
 };
 
 export const fonts = {

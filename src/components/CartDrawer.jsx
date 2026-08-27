@@ -1,5 +1,6 @@
 import { colors, fonts } from "../theme";
 import HoverButton from "./HoverButton";
+import Alert from "./Alert";
 import { SWISH_NUMBER_DISPLAY, buildSwishLink, buildSwishQrUrl } from "../lib/business";
 
 const fieldStyle = {
@@ -273,9 +274,7 @@ export default function CartDrawer({
                 >
                   {sendingOrder ? "Skickar…" : "Skicka beställning"}
                 </HoverButton>
-                {orderError && (
-                  <p style={{ margin: "2px 0 0", fontSize: 13, lineHeight: 1.5, color: colors.soldBadge }}>{orderError}</p>
-                )}
+                <Alert type="error" style={{ marginTop: 10, marginBottom: 0 }}>{orderError}</Alert>
               </form>
             </div>
           )}

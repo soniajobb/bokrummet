@@ -2,6 +2,8 @@ import { useState } from "react";
 import { colors, fonts } from "../theme";
 import { supabase } from "../lib/supabaseClient";
 import HoverButton from "./HoverButton";
+import Alert from "./Alert";
+import { safeErrorMessage } from "../lib/errors";
 
 const fieldStyle = {
   background: colors.paper,
@@ -35,7 +37,7 @@ export default function ResetPasswordScreen({ onDone }) {
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) {
-        setError(updateError.message);
+        setError(safeErrorMessage(updateError, "Kunde inte spara det nya lösenordet just nu. Testa igen om en liten stund."));
         return;
       }
       onDone();
@@ -81,7 +83,7 @@ export default function ResetPasswordScreen({ onDone }) {
           Välj ett nytt lösenord för ditt konto.
         </p>
 
-        {error && <div style={{ marginBottom: 16, color: colors.soldBadge, fontSize: 14 }}>{error}</div>}
+        <Alert type="error">{error}</Alert>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <input

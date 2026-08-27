@@ -2,6 +2,8 @@ import { useState } from "react";
 import { colors, fonts } from "../theme";
 import { supabase } from "../lib/supabaseClient";
 import HoverButton from "./HoverButton";
+import Alert from "./Alert";
+import { getSignUpErrorMessage, getLoginErrorMessage, getRateLimitMessage, safeErrorMessage } from "../lib/errors";
 
 const fieldStyle = {
   background: colors.paper,
@@ -45,11 +47,7 @@ export default function AuthScreen({ onAuthed }) {
         password: loginForm.password,
       });
       if (signInError) {
-        if (/confirm/i.test(signInError.message)) {
-          setError("Du måste bekräfta din e-postadress innan du kan logga in. Kolla din inkorg (och skräppost) efter mejlet med bekräftelselänken.");
-        } else {
-          setError("Fel e-post eller lösenord.");
-        }
+        setError(getLoginErrorMessage(signInError));
         return;
       }
       onAuthed?.();
@@ -79,13 +77,7 @@ export default function AuthScreen({ onAuthed }) {
         options: { data: { phone: phone.trim(), full_name: fullName.trim() } },
       });
       if (signUpError) {
-        if (/registered/i.test(signUpError.message)) {
-          setError("Den e-postadressen är redan registrerad.");
-        } else if (/rate limit/i.test(signUpError.message)) {
-          setError("För många mejl har skickats på kort tid. Vänta en liten stund och försök igen.");
-        } else {
-          setError(signUpError.message);
-        }
+        setError(getSignUpErrorMessage(signUpError));
         return;
       }
       if (data.session) {
@@ -118,8 +110,8 @@ export default function AuthScreen({ onAuthed }) {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotForm.email.trim(), {
         redirectTo: window.location.origin,
       });
-      if (resetError && /rate limit/i.test(resetError.message)) {
-        setError("För många mejl har skickats på kort tid. Vänta en liten stund och försök igen.");
+      if (resetError && /rate limit/i.test(safeErrorMessage(resetError, ""))) {
+        setError(getRateLimitMessage(resetError));
         return;
       }
       setNotice("Om kontot finns skickar vi en återställningslänk till din e-post.");
@@ -205,12 +197,8 @@ export default function AuthScreen({ onAuthed }) {
           </div>
         )}
 
-        {error && (
-          <div style={{ marginBottom: 16, color: colors.soldBadge, fontSize: 14 }}>{error}</div>
-        )}
-        {notice && (
-          <div style={{ marginBottom: 16, color: colors.green, fontSize: 14 }}>{notice}</div>
-        )}
+        <Alert type="error">{error}</Alert>
+        <Alert type="success">{notice}</Alert>
 
         {mode === "login" ? (
           <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
