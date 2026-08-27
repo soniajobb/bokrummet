@@ -241,6 +241,7 @@ export default function ListView({
       </div>
 
       <div style={{ marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <HoverButton
           onClick={() => setFiltersOpen((v) => !v)}
           style={{
@@ -282,6 +283,11 @@ export default function ListView({
             ▾
           </span>
         </HoverButton>
+
+        <span style={{ fontSize: 13, color: colors.textMuted, letterSpacing: ".2px" }}>
+          {sortedBooks.length} {sortedBooks.length === 1 ? "bok" : "böcker"}
+        </span>
+        </div>
 
         {filtersOpen && (
           <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
